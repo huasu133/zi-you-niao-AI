@@ -23,6 +23,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
+    autoHideMenuBar: true,
     icon: path.join(__dirname, 'ziyouniao-icon.ico'),
     title: '自由鸟',
     webPreferences: {
