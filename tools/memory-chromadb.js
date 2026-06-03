@@ -8,7 +8,19 @@ const MEMORY_DIR = path.join(__dirname, '..', 'memory')
 const CHROMA_DIR = path.join(MEMORY_DIR, 'chromadb')
 const CHROMA_PORT = 8001
 const CHROMA_URL = `http://127.0.0.1:${CHROMA_PORT}`
-const PYTHON = 'C:/Users/song/.workbuddy/binaries/python/versions/3.13.12/python.exe'
+const PYTHON = process.env.PYTHON_PATH || (() => {
+  // 自动探测 Python 路径
+  const home = process.env.USERPROFILE || process.env.HOME
+  const candidates = [
+    home + '/.workbuddy/binaries/python/versions/3.13.12/python.exe',
+    'python3', 'python',
+    '/usr/local/bin/python3', '/usr/bin/python3',
+  ]
+  for (const c of candidates) {
+    try { require('child_process').execSync(`"${c}" --version`, { stdio: 'ignore' }); return c } catch {}
+  }
+  return 'python3'
+})()
 
 let _dbReady = false
 let _dbInitPromise = null

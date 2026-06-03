@@ -39,6 +39,14 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // 中间件
 app.use(express.json({ limit: '1mb' }))
+// 动态注入 API_TOKEN 到前端（不暴露在源码中）
+app.get('/', (req, res) => {
+  const html = fs.readFileSync('public/index.html', 'utf-8')
+  res.send(html.replace(
+    'const API_TOKEN = \'ziyouniao-local\'',
+    `const API_TOKEN = '${API_TOKEN}'`
+  ))
+})
 app.use(express.static('public'))
 
 app.use((req, res, next) => {
@@ -271,11 +279,9 @@ app.post('/chat', async (req, res) => {
         }
       }
 
-      // 截断 messages 防止无限增长
+      // 截断 messages 防止无限增长（保留 system + 最近49条）
       if (messages.length > 50) {
-        const systemMsg = messages[0]
-        messages.splice(1, messages.length - 50)
-        messages.unshift(systemMsg)
+        messages = [messages[0], ...messages.slice(-49)]
       }
     }
 

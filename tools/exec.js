@@ -13,10 +13,11 @@ const ALLOWED_PREFIXES = [
 async function runCommand(command) {
   if (command.length > 500) return { error: '命令过长 (最大500字符)' }
 
-  const ALLOWED = ALLOWED_PREFIXES.some(p => command === p || command.startsWith(p + ' '))
-  const SHELL_BLOCKED = /[|;&`$(){}]/.test(command.replace(/\/\/.*$/,''))
+  const trimmed = command.trimStart()
+  const ALLOWED = ALLOWED_PREFIXES.some(p => trimmed === p || trimmed.startsWith(p + ' ') || trimmed.startsWith(p + '\t'))
+  const SHELL_BLOCKED = /[|;&`$(){}]/.test(trimmed.replace(/\/\/.*$/,''))
   const BLOCKED = /\b(rm\s+(?:-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*\s+\/+|\s+-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*\s+\/+)|sudo\s+|pkexec\s+|shutdown\s+|reboot\s+|mkfs\s+|:\(\)\s*\{|dd\s+if=)/i
-  const NODE_EVAL = /node\s+(-e|--eval)\s+["']/.test(command)
+  const NODE_EVAL = /node\s+(-e|--eval)\s+["']/.test(trimmed)
 
   if (!ALLOWED || SHELL_BLOCKED || BLOCKED.test(command) || NODE_EVAL)
     return { error: '命令未被允许或包含危险操作符' }
