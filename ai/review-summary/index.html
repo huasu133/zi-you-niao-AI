@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自由鸟 v4 — 审查报告</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 24px; margin-bottom: 8px; }
+.sub { color: #999; font-size: 14px; margin-bottom: 30px; }
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; border-left: 4px solid #4a6cf7; }
+.card.ui { border-left-color: #e67e22; }
+.card.sec { border-left-color: #e74c3c; }
+.card.node { border-left-color: #27ae60; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+.score { font-size: 32px; font-weight: 700; color: #4a6cf7; }
+.score.warn { color: #e67e22; }
+.score.good { color: #27ae60; }
+.meta { display: flex; gap: 20px; margin-bottom: 16px; align-items: center; }
+.issues { margin-top: 16px; }
+.issue { padding: 8px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px; align-items: flex-start; }
+.issue:last-child { border: none; }
+.badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.badge.red { background: #fde8e8; color: #e74c3c; }
+.badge.orange { background: #fef3e2; color: #e67e22; }
+.badge.green { background: #e8f5e9; color: #27ae60; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+th, td { padding: 6px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+th { background: #f9f9f9; font-weight: 600; }
+.summary-banner { background: #fef3e2; border: 1px solid #f39c12; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+.summary-banner h3 { color: #e67e22; font-size: 14px; margin-bottom: 8px; }
+.summary-banner ul { margin-left: 20px; font-size: 13px; line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<h1>自由鸟 v4 — 专家审查报告</h1>
+<p class="sub">审查日期 2026-06-03 · 3 位专家 · 45 条审查意见</p>
+
+<div class="summary-banner">
+<h3>合并阻塞项 (8 项需立即修复)</h3>
+<ul>
+<li><b>memory.js 全同步I/O</b> — 阻塞 Node.js event loop</li>
+<li><b>saveMemory 竞态条件</b> — read-then-write 无锁</li>
+<li><b>__confirmed 可AI绕过</b> — 需改为服务端token机制</li>
+<li><b>XSS风险</b> — addMessage 直接 innerHTML</li>
+<li><b>toast() 未定义</b> — 搜索模式切换报 ReferenceError</li>
+<li><b>Enter键不支持发送</b> — 聊天核心交互缺失</li>
+<li><b>缺少 viewport meta</b> — 移动端完全不可用</li>
+<li><b>history丢user消息</b> — 多轮对话上下文断裂</li>
+</ul>
+</div>
+
+<!-- UI Review -->
+<div class="card ui">
+  <div class="meta">
+    <span class="score warn">5.9</span>
+    <span>/10</span>
+  </div>
+  <h2>🎨 Web UI 审查</h2>
+
+  <table>
+    <tr><th>面板</th><th>评分</th><th>面板</th><th>评分</th></tr>
+    <tr><td>布局结构</td><td>7/10</td><td>聊天界面</td><td>6.5/10</td></tr>
+    <tr><td>连接器面板</td><td>6/10</td><td>任务管理</td><td>6/10</td></tr>
+    <tr><td>设置面板</td><td>6.5/10</td><td>确认对话框</td><td>7/10</td></tr>
+    <tr><td>响应式</td><td>2/10</td><td>CSS一致性</td><td>6/10</td></tr>
+  </table>
+
+  <div class="issues">
+    <h3 style="font-size:14px;margin-bottom:8px">阻塞项</h3>
+    <div class="issue"><span class="badge red">BUG</span> toast() 未定义，切换搜索模式报 ReferenceError</div>
+    <div class="issue"><span class="badge red">安全</span> XSS 风险：addMessage 直接 innerHTML 拼接用户输入</div>
+    <div class="issue"><span class="badge red">缺失</span> 无 &lt;meta viewport&gt;，移动端不可用</div>
+    <div class="issue"><span class="badge red">体验</span> Enter 键不支持发送消息</div>
+    <div class="issue"><span class="badge red">逻辑</span> history 只存 assistant，多轮对话丢上下文</div>
+  </div>
+</div>
+
+<!-- Security Review -->
+<div class="card sec">
+  <div class="meta">
+    <span class="score good">良好</span>
+    <span>本地单用户无直接漏洞</span>
+  </div>
+  <h2>🛡️ 安全审查</h2>
+  <table>
+    <tr><th>防护项</th><th>状态</th><th>防护项</th><th>状态</th></tr>
+    <tr><td>路径遍历</td><td>✅ 通过</td><td>命令注入</td><td>✅ 通过</td></tr>
+    <tr><td>SSRF</td><td>⚠️ 待改进</td><td>输出脱敏</td><td>✅ 通过</td></tr>
+    <tr><td>安全头</td><td>✅ 通过</td><td>速率限制</td><td>✅ 通过</td></tr>
+    <tr><td>__confirmed</td><td>⚠️ 待改进</td><td>127.0.0.1</td><td>✅ 通过</td></tr>
+  </table>
+
+  <div class="issues">
+    <h3 style="font-size:14px;margin-bottom:8px">待修复</h3>
+    <div class="issue"><span class="badge orange">严重</span> SSRF 文档声明与代码不符 — fetch.js 不存在</div>
+    <div class="issue"><span class="badge orange">中</span> __confirmed 可被 AI 自设为 true 绕过</div>
+    <div class="issue"><span class="badge green">低</span> find.js/list.js 缺 realpath 校验</div>
+    <div class="issue"><span class="badge green">低</span> CSRF 缺失、curl/wget 白名单风险等 5 项低危</div>
+  </div>
+</div>
+
+<!-- Node.js Review -->
+<div class="card node">
+  <div class="meta">
+    <span class="score">6.2</span>
+    <span>/10 · 5 严重 + 10 建议 + 9 优化</span>
+  </div>
+  <h2>⚡ Node.js 架构审查</h2>
+  <table>
+    <tr><th>模块</th><th>架构</th><th>性能</th><th>风险</th></tr>
+    <tr><td>app.js</td><td>7/10</td><td>6/10</td><td>6/10</td></tr>
+    <tr><td>tool-registry</td><td>7/10</td><td>6/10</td><td>5/10</td></tr>
+    <tr><td>expert-router</td><td>6/10</td><td>5/10</td><td>5/10</td></tr>
+    <tr><td>mcp-client</td><td>7/10</td><td>6/10</td><td>6/10</td></tr>
+    <tr><td>memory.js</td><td>5/10</td><td><b>3/10</b></td><td>4/10</td></tr>
+  </table>
+
+  <div class="issues">
+    <h3 style="font-size:14px;margin-bottom:8px">严重问题</h3>
+    <div class="issue"><span class="badge red">I/O</span> memory.js 全同步I/O阻塞事件循环 — 最大性能瓶颈</div>
+    <div class="issue"><span class="badge red">竞态</span> saveMemory read-then-write + 历史文件并发写入</div>
+    <div class="issue"><span class="badge red">健壮</span> 专家文件加载无try-catch，单文件损坏全挂</div>
+    <div class="issue"><span class="badge orange">延迟</span> 搜索降级链全串行，并行可提速3-5倍</div>
+    <div class="issue"><span class="badge orange">内存</span> 搜索缓存/速率Map/消息数组均无上限</div>
+  </div>
+</div>
+
+</body>
+</html>

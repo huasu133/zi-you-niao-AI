@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自由鸟</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; }
+
+.sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow-y: auto; }
+.logo { padding: 20px; font-size: 18px; font-weight: 600; color: #4a6cf7; border-bottom: 1px solid #e0e0e0; }
+.nav-item { padding: 12px 20px; cursor: pointer; color: #555; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+.nav-item:hover { background: #f0f4ff; color: #4a6cf7; }
+.nav-item.active { background: #f0f4ff; color: #4a6cf7; font-weight: 500; }
+.nav-status { margin-left: auto; font-size: 11px; color: #999; }
+
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.tab-content { flex: 1; display: none; flex-direction: column; }
+.tab-content.active { display: flex; }
+
+.chat-messages { flex: 1; overflow: auto; padding: 20px; }
+.chat-input-area { padding: 12px 20px; border-top: 1px solid #e0e0e0; background: #fff; }
+.chat-input { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; font-size: 14px; font-family: inherit; }
+.chat-actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn-primary { flex: 1; padding: 8px; background: #4a6cf7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
+.msg { margin: 10px 0; padding: 10px 14px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; font-size: 14px; }
+.msg-user { background: #f0f4ff; margin-left: 40px; }
+.msg-ai { background: #fff; border: 1px solid #e0e0e0; margin-right: 40px; }
+.msg-system { background: #fff3cd; color: #856404; font-size: 13px; text-align: center; }
+.welcome { text-align: center; color: #999; padding: 60px 20px; font-size: 16px; line-height: 1.8; }
+
+.connector-list { padding: 20px; }
+.connector-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+.connector-dot { width: 10px; height: 10px; border-radius: 50%; }
+.connector-name { font-size: 14px; font-weight: 500; }
+.connector-status { font-size: 12px; color: #999; }
+
+.settings-panel { padding: 20px; max-width: 500px; }
+.setting-row { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+.setting-label { font-size: 13px; color: #666; margin-bottom: 4px; }
+.setting-value { font-size: 14px; }
+
+#confirmOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1000; }
+#confirmDialog { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #fff; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1001; }
+#confirmMsg { margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-deny { padding: 8px 20px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+.btn-allow { padding: 8px 20px; background: #27ae60; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">自由鸟</div>
+  <div class="nav-item active" data-tab="chat" onclick="switchTab('chat')">💬 对话</div>
+  <div class="nav-item" data-tab="connectors" onclick="switchTab('connectors')">🔌 连接器 <span class="nav-status" id="connectorBadge">0</span></div>
+  <div class="nav-item" data-tab="experts" onclick="switchTab('experts')">👥 专家</div>
+  <div class="nav-item" data-tab="memory" onclick="switchTab('memory')">🧠 记忆</div>
+  <div class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">📋 任务 <span class="nav-status" id="taskBadge">0</span></div>
+  <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">⚙️ 设置</div>
+  <div style="margin-top:auto;padding:12px 20px;font-size:11px;color:#999" id="statusBar">未连接</div>
+</div>
+
+<div class="main">
+  <div class="tab-content active" id="tab-chat">
+    <div class="chat-messages" id="messages">
+      <div class="welcome">你好，我是自由鸟 AI 总控<br>可以帮你读文件、搜信息、执行任务</div>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="input" placeholder="跟你的 AI 说话... (Enter 发送, Shift+Enter 换行)" rows="2"></textarea>
+      <div class="chat-actions">
+        <button class="btn-primary" id="sendBtn" onclick="send()">发送</button>
+        <button class="btn-secondary" onclick="clearHistory()">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-connectors">
+    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">连接器管理</div>
+    <div class="connector-list" id="connectorList">加载中...</div>
+  </div>
+
+  <div class="tab-content" id="tab-experts">
+    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">专家团队</div>
+    <div class="connector-list" id="expertList">加载中...</div>
+  </div>
+
+  <div class="tab-content" id="tab-memory">
+    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">长期记忆</div>
+    <pre class="connector-list" id="memoryContent" style="font-size:13px;line-height:1.8">加载中...</pre>
+  </div>
+
+  <div class="tab-content" id="tab-tasks">
+    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;display:flex;gap:10px;align-items:center">
+      <span style="font-size:14px;font-weight:500">任务列表</span>
+      <select id="taskFilter" onchange="loadTasks()" style="margin-left:auto;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+        <option value="">全部</option><option value="pending">未完成</option><option value="done">已完成</option>
+      </select>
+    </div>
+    <div id="taskList" class="connector-list" style="flex:1;overflow:auto">加载中...</div>
+    <div style="padding:12px 20px;border-top:1px solid #e0e0e0;display:flex;gap:8px;background:#fff">
+      <input id="taskInput" placeholder="新任务... (Enter 添加)" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px" onkeydown="if(event.key==='Enter')addTask()">
+      <button class="btn-primary" onclick="addTask()" style="flex:none;padding:8px 20px">添加</button>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-settings">
+    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">设置</div>
+    <div class="settings-panel">
+      <div class="setting-row"><div class="setting-label">服务器地址</div><div class="setting-value">http://127.0.0.1:3456</div></div>
+      <div class="setting-row"><div class="setting-label">模型</div><div class="setting-value">DeepSeek</div></div>
+      <div class="setting-row"><div class="setting-label">GitHub</div><div class="setting-value" id="githubStatus">检查中...</div></div>
+      <div class="setting-row"><div class="setting-label">搜索模式</div><div class="setting-value">
+        <select id="searchModeSelect" onchange="toggleSearchMode()" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px">
+          <option value="basic">快速搜索</option><option value="deep">深度搜索</option>
+        </select>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<div id="confirmOverlay" onclick="confirmAction(false)"></div>
+<div id="confirmDialog">
+  <div id="confirmMsg"></div>
+  <div class="confirm-actions">
+    <button class="btn-deny" onclick="confirmAction(false)">拒绝</button>
+    <button class="btn-allow" onclick="confirmAction(true)">允许</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let history = []
+let pendingConfirm = null
+const API_TOKEN = 'ziyouniao-local'
+
+async function api(url, opts = {}) {
+  opts.headers = { ...opts.headers, 'X-API-Token': API_TOKEN }
+  return fetch(url, opts)
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 2000)
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('tab-' + name).classList.add('active')
+  document.querySelector(`.nav-item[data-tab="${name}"]`).classList.add('active')
+  if (name === 'connectors') loadConnectors()
+  if (name === 'experts') loadExperts()
+  if (name === 'memory') loadMemory()
+  if (name === 'tasks') loadTasks()
+  if (name === 'settings') loadSettings()
+}
+
+async function loadConnectors() {
+  try {
+    const res = await api('/connectors')
+    const data = await res.json()
+    const list = document.getElementById('connectorList')
+    list.innerHTML = ''
+    let count = 0
+    for (const [name, connected] of Object.entries(data.connectors)) {
+      count += connected ? 1 : 0
+      list.innerHTML += `<div class="connector-card">
+        <div class="connector-dot" style="background:${connected ? '#27ae60' : '#ccc'}"></div>
+        <div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">${connected ? '已连接' : '未配置'}</div></div>
+      </div>`
+    }
+    document.getElementById('connectorBadge').textContent = count
+  } catch (_) {}
+}
+
+async function loadExperts() {
+  try {
+    const res = await api('/experts')
+    const data = await res.json()
+    const list = document.getElementById('expertList')
+    list.innerHTML = ''
+    for (const name of data.experts) {
+      list.innerHTML += `<div class="connector-card"><div class="connector-dot" style="background:#4a6cf7"></div><div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">在聊天中说"叫${escapeHtml(name)}"来调用</div></div></div>`
+    }
+  } catch (_) {
+    document.getElementById('expertList').innerHTML = '<div class="connector-card">暂无专家</div>'
+  }
+}
+
+async function loadMemory() {
+  try {
+    const res = await api('/memory')
+    const data = await res.json()
+    document.getElementById('memoryContent').textContent = data.content || '暂无记忆'
+  } catch (_) {}
+}
+
+async function loadTasks() {
+  try {
+    const filter = document.getElementById('taskFilter')?.value || ''
+    const res = await api(`/tasks?filter=${filter}`)
+    const data = await res.json()
+    const list = document.getElementById('taskList')
+    list.innerHTML = ''
+    if (!data.tasks || data.tasks.length === 0) {
+      list.innerHTML = '<div class="connector-card" style="color:#999">暂无任务</div>'
+      document.getElementById('taskBadge').textContent = '0'
+      return
+    }
+    const pending = data.tasks.filter(t => t.status === 'pending').length
+    document.getElementById('taskBadge').textContent = pending
+    for (const task of data.tasks) {
+      const done = task.status === 'completed'
+      list.innerHTML += `<div class="connector-card" style="${done ? 'opacity:0.5' : ''}">
+        <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${task.id.replace(/'/g, "\\'")}', this.checked)" style="width:18px;height:18px">
+        <div style="flex:1">
+          <div class="connector-name" style="${done ? 'text-decoration:line-through' : ''}">${escapeHtml(task.subject)}</div>
+          <div class="connector-status">${escapeHtml(task.description || '')} · ${task.createdAt}</div>
+        </div>
+      </div>`
+    }
+  } catch (_) {}
+}
+
+async function addTask() {
+  const input = document.getElementById('taskInput')
+  if (!input.value.trim()) return
+  await api('/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subject: input.value }),
+  })
+  input.value = ''
+  loadTasks()
+}
+
+async function toggleTask(id, completed) {
+  await api(`/tasks/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: completed ? 'completed' : 'pending' }),
+  })
+  loadTasks()
+}
+
+async function loadSettings() {
+  try {
+    const res = await api('/connectors')
+    const data = await res.json()
+    const gh = data.connectors?.github
+    document.getElementById('githubStatus').textContent = gh ? '已连接' : '未配置'
+    document.getElementById('githubStatus').style.color = gh ? '#27ae60' : '#999'
+    const configRes = await api('/api/config')
+    const config = await configRes.json()
+    document.getElementById('searchModeSelect').value = config.searchMode
+  } catch (_) {}
+}
+
+async function toggleSearchMode() {
+  const mode = document.getElementById('searchModeSelect').value
+  await api('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ searchMode: mode }),
+  })
+  toast(mode === 'deep' ? '已切换为深度搜索模式' : '已切换为快速搜索模式')
+}
+
+async function send() {
+  const msg = document.getElementById('input').value
+  if (!msg) return
+  document.getElementById('input').value = ''
+  addMessage('你', msg, 'msg-user')
+  history.push({ role: 'user', content: msg })
+  document.getElementById('sendBtn').disabled = true
+  document.getElementById('sendBtn').textContent = '处理中...'
+
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60000)
+    const res = await api('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: history.slice(-10) }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (!res.ok) throw new Error('请求失败')
+
+    const replyEl = addMessage('自由鸟', '', 'msg-ai')
+    const bodyEl = replyEl.querySelector('.msg-body')
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder('utf-8', { stream: true })
+    let currentReply = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      currentReply += decoder.decode(value)
+      bodyEl.textContent = currentReply
+      bodyEl.parentElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+    history.push({ role: 'assistant', content: currentReply })
+  } catch (e) {
+    addMessage('系统', '错误: ' + e.message, 'msg-system')
+  }
+  document.getElementById('sendBtn').disabled = false
+  document.getElementById('sendBtn').textContent = '发送'
+  switchTab('chat')
+}
+
+function addMessage(who, text, cls) {
+  const div = document.createElement('div')
+  div.className = 'msg ' + cls
+  const now = new Date()
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0')
+  div.innerHTML = `<span style="font-size:11px;color:#999;margin-right:6px">${time}</span><span class="msg-body">${escapeHtml(who)}: ${escapeHtml(text).replace(/\n/g, '<br>')}</span>`
+  document.getElementById('messages').appendChild(div)
+  div.scrollIntoView()
+  return div
+}
+
+function clearHistory() {
+  history = []
+  document.getElementById('messages').innerHTML = '<div class="welcome">对话已清空，记忆仍然保留</div>'
+}
+
+function showConfirm(msg, callback) {
+  document.getElementById('confirmMsg').textContent = msg
+  document.getElementById('confirmOverlay').style.display = 'block'
+  document.getElementById('confirmDialog').style.display = 'block'
+  document.body.style.overflow = 'hidden'
+  pendingConfirm = callback
+}
+
+function confirmAction(approved) {
+  document.getElementById('confirmOverlay').style.display = 'none'
+  document.getElementById('confirmDialog').style.display = 'none'
+  document.body.style.overflow = ''
+  if (pendingConfirm) pendingConfirm(approved)
+  pendingConfirm = null
+}
+
+// 键盘支持
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && pendingConfirm !== null) {
+    confirmAction(false)
+  }
+})
+
+// Enter 发送
+document.getElementById('input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    send()
+  }
+})
+
+// 状态轮询
+let pollInterval = 5000
+function pollHealth() {
+  api('/health').then(res => {
+    if (res.ok) {
+      document.getElementById('statusBar').textContent = '✅ 运行中'
+      pollInterval = 5000
+    }
+  }).catch(() => {
+    document.getElementById('statusBar').textContent = '❌ 离线'
+    pollInterval = Math.min(pollInterval * 2, 60000)
+  })
+  setTimeout(pollHealth, pollInterval)
+}
+setTimeout(pollHealth, 5000)
+loadConnectors()
+loadSettings()
+</script>
+</body>
+</html>

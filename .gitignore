@@ -1,0 +1,6 @@
+.env
+node_modules/
+tasks.json
+memory/
+*.png
+.DS_Store
