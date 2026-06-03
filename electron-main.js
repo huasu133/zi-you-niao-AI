@@ -26,6 +26,7 @@ function createWindow() {
     icon: path.join(__dirname, 'ziyouniao-icon.ico'),
     title: '自由鸟',
     webPreferences: {
+      sandbox: true,
       nodeIntegration: false,
       contextIsolation: true,
     },

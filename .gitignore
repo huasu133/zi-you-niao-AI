@@ -1,6 +1,11 @@
 .env
 node_modules/
+dist/
 tasks.json
 memory/
+chromadb/
 *.png
+*.db
+*.asar
+*.lnk
 .DS_Store

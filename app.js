@@ -94,7 +94,13 @@ app.use((req, res, next) => {
 })
 
 // API Token 认证（0.0.0.0 绑定必须）
-const API_TOKEN = process.env.API_TOKEN || 'ziyouniao-local'
+const API_TOKEN = process.env.API_TOKEN || (() => {
+  const crypto = require('crypto')
+  const token = crypto.randomBytes(16).toString('hex')
+  console.warn(`⚠️ 未设置 API_TOKEN，使用随机值: ${token}`)
+  console.warn('   建议在 .env 中设置: API_TOKEN=你的密钥')
+  return token
+})()
 app.use((req, res, next) => {
   if (req.path === '/health') return next()
   const token = req.headers['x-api-token']
