@@ -241,6 +241,13 @@ body {
 .msg.user .msg-bubble code { background: rgba(255,255,255,0.2); }
 .msg-bubble pre { background: #1E1E1E; color: #D4D4D4; padding: var(--space-md) var(--space-lg); border-radius: 8px; overflow-x: auto; font-size: var(--font-small); line-height: 1.5; margin: var(--space-sm) 0; }
 .msg-bubble pre code { background: none; padding: 0; color: inherit; }
+.msg-bubble .md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: var(--font-small); }
+.msg-bubble .md-table th { background: rgba(0,0,0,0.05); padding: 6px 8px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--c-divider); }
+.msg-bubble .md-table td { padding: 5px 8px; border-bottom: 1px solid var(--c-divider); }
+.msg.user .msg-bubble .md-table th { background: rgba(255,255,255,0.15); color: var(--c-white); }
+.msg.user .msg-bubble .md-table td { border-bottom-color: rgba(255,255,255,0.15); color: var(--c-white); }
+.msg-bubble ul, .msg-bubble ol { padding-left: 20px; margin: 6px 0; }
+.msg-bubble li { margin: 3px 0; line-height: 1.6; }
 
 /* WorkBuddy 工具调用 / 过程消息折叠块 */
 .tool-call-group { margin: var(--space-sm) 0; display: none; }
@@ -446,6 +453,30 @@ const sessionNames = new Set(['对话'])
 
 function getActive() { return sessions.find(s => s.id === activeSessionId) }
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+// Markdown → HTML（表格/列表/粗体/代码）
+function md2html(text) {
+  let html = escapeHtml(text)
+  // 表格
+  html = html.replace(/\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g, function(m, header, body) {
+    const hcols = header.split('|').filter(Boolean).map(c => c.trim())
+    const rows = body.trim().split('\n').map(r => r.split('|').filter(Boolean).map(c => c.trim()))
+    return '<table class="md-table"><thead><tr>' + hcols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>'
+      + rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('') + '</tbody></table>'
+  })
+  // 粗体
+  html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+  // 代码
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+  // 列表
+  html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+  html = html.replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+  // 换行
+  html = html.replace(/\n\n/g, '<br><br>')
+  html = html.replace(/\n/g, '<br>')
+  return html
+}
 
 // ===== 会话管理 =====
 function saveSessions() {
@@ -758,7 +789,7 @@ async function send() {
       const { done, value } = await reader.read()
       if (done) break
       currentReply += decoder.decode(value)
-      contentEl.textContent = currentReply
+      contentEl.innerHTML = md2html(currentReply)
       scrollToBottom()
     }
     getActive().history.push({ role: 'assistant', content: currentReply })
