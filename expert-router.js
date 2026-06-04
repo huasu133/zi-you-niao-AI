@@ -2,7 +2,7 @@ require('dotenv').config()
 const path = require('path')
 const fs = require('fs')
 const OpenAI = require('openai')
-const { EXPERTS, TEAM_DESC, TOOLS, EXPERT_TOOLS, SAFETY_RULES } = require('./tool-registry')
+const { TOOLS, SAFETY_RULES } = require('./tool-registry')
 const { loadMemory, loadLessons } = require('./tools/memory')
 
 let _openai = null
@@ -50,11 +50,18 @@ async function callExpert(expert, userMessage, history) {
   }
   const expertToolDefs = TOOLS.filter(t => expert.tools.includes(t.function.name))
 
-  // 确认保护包装器
-  async function safeHandler(tool, args) {
+  // 确认保护：危险操作必须真人确认，不能由LLM绕过
+  async function safeHandler(tool, args, expert) {
     const dangerousOps = ['write_file', 'run_command']
-    if (dangerousOps.includes(tool.function.name) && !args.__confirmed) {
-      return JSON.stringify({ error: '写文件/执行命令操作需要人工确认' })
+    if (dangerousOps.includes(tool.function.name)) {
+      // LLM可能注入 __confirmed，强制删除
+      delete args.__confirmed
+      const chatId = expertHistory.length > 0 ? `chat_${expertHistory.length}` : 'chat_1'
+      return JSON.stringify({
+        error: `⛔ 专家 ${expert.role} 想执行 ${tool.function.name}，需要你在对话中输入"确认"来批准`,
+        confirm_required: true,
+        confirm_id: Buffer.from(`${chatId}:${tool.function.name}:${Date.now()}`).toString('base64')
+      })
     }
     return await tool.handler(args)
   }
@@ -81,7 +88,7 @@ async function callExpert(expert, userMessage, history) {
       if (tool) {
         try {
           const args = JSON.parse(tc.function.arguments)
-          const result = await safeHandler(tool, args)
+          const result = await safeHandler(tool, args, expert)
           messages.push({ role: 'tool', content: typeof result === 'string' ? result : JSON.stringify(result), tool_call_id: tc.id })
         } catch (e) {
           messages.push({ role: 'tool', content: `执行错误: ${e.message}`, tool_call_id: tc.id })
@@ -100,7 +107,7 @@ async function callExpert(expert, userMessage, history) {
         if (tool) {
           try {
             const args = JSON.parse(tc.function.arguments)
-            const result = await safeHandler(tool, args)
+            const result = await safeHandler(tool, args, expert)
             messages.push({ role: 'tool', content: typeof result === 'string' ? result : JSON.stringify(result), tool_call_id: tc.id })
           } catch (e) {
             messages.push({ role: 'tool', content: `执行错误: ${e.message}`, tool_call_id: tc.id })

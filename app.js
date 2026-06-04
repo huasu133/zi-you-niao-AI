@@ -39,14 +39,11 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // 中间件
 app.use(express.json({ limit: '1mb' }))
-// 动态注入 API_TOKEN 到前端（不暴露在源码中）
-app.get('/', (req, res) => {
-  const html = fs.readFileSync('public/index.html', 'utf-8')
-  res.send(html.replace(
-    'const API_TOKEN = \'ziyouniao-local\'',
-    `const API_TOKEN = '${API_TOKEN}'`
-  ))
-})
+// 启动时缓存登录页（避免每次读磁盘 + 转义 Token 防 XSS）
+const escapeJS = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\x3c')
+const CACHED_INDEX = fs.readFileSync('public/index.html', 'utf-8')
+  .replace("const API_TOKEN = 'ziyouniao-local'", `const API_TOKEN = '${escapeJS(API_TOKEN)}'`)
+app.get('/', (req, res) => res.type('html').send(CACHED_INDEX))
 app.use(express.static('public'))
 
 app.use((req, res, next) => {
