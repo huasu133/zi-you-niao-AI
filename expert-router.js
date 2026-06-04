@@ -50,6 +50,20 @@ async function callExpert(expert, userMessage, history) {
   }
   const expertToolDefs = TOOLS.filter(t => expert.tools.includes(t.function.name))
 
+  // 结果脱敏：移除敏感信息后再传给 LLM
+  const SENSITIVE_PATTERNS = [
+    /(sk-[a-zA-Z0-9]{32,})/g,
+    /(api_key|API_KEY|apikey)=['"][^'"]+['"]/gi,
+    /Bearer\s+[a-zA-Z0-9_\-\.]{20,}/g,
+  ]
+  function sanitizeOutput(text) {
+    let result = text
+    for (const pattern of SENSITIVE_PATTERNS) {
+      result = result.replace(pattern, '[已脱敏]')
+    }
+    return result
+  }
+
   // 确认保护：危险操作必须真人确认，不能由LLM绕过
   async function safeHandler(tool, args, expert) {
     const dangerousOps = ['write_file', 'run_command']
@@ -71,7 +85,16 @@ async function callExpert(expert, userMessage, history) {
     { role: 'user', content: userMessage },
   ]
 
-  const completion = await getOpenAI().chat.completions.create({
+  const LLM_TIMEOUT = 30000 // 单次 LLM 调用超时 30 秒
+  async function llmCall(params) {
+    const result = await Promise.race([
+      getOpenAI().chat.completions.create(params),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('LLM调用超时(30s)')), LLM_TIMEOUT))
+    ])
+    return result
+  }
+
+  const completion = await llmCall({
     model: 'deepseek-chat',
     messages,
     tools: expertToolDefs.map(t => ({ type: t.type, function: t.function })),
@@ -88,7 +111,8 @@ async function callExpert(expert, userMessage, history) {
       if (tool) {
         try {
           const args = JSON.parse(tc.function.arguments)
-          const result = await safeHandler(tool, args, expert)
+          const raw = await safeHandler(tool, args, expert)
+          const result = sanitizeOutput(typeof raw === 'string' ? raw : JSON.stringify(raw))
           messages.push({ role: 'tool', content: typeof result === 'string' ? result : JSON.stringify(result), tool_call_id: tc.id })
         } catch (e) {
           messages.push({ role: 'tool', content: `执行错误: ${e.message}`, tool_call_id: tc.id })
@@ -96,7 +120,7 @@ async function callExpert(expert, userMessage, history) {
       }
     }
     for (let round = 0; round < 3; round++) {
-      const next = await getOpenAI().chat.completions.create({
+      const next = await llmCall({
         model: 'deepseek-chat', messages, tools: expertToolDefs.map(t => ({ type: t.type, function: t.function })), stream: false,
       })
       const msg = next.choices[0].message
@@ -107,7 +131,8 @@ async function callExpert(expert, userMessage, history) {
         if (tool) {
           try {
             const args = JSON.parse(tc.function.arguments)
-            const result = await safeHandler(tool, args, expert)
+            const raw = await safeHandler(tool, args, expert)
+          const result = sanitizeOutput(typeof raw === 'string' ? raw : JSON.stringify(raw))
             messages.push({ role: 'tool', content: typeof result === 'string' ? result : JSON.stringify(result), tool_call_id: tc.id })
           } catch (e) {
             messages.push({ role: 'tool', content: `执行错误: ${e.message}`, tool_call_id: tc.id })
@@ -126,8 +151,8 @@ async function callExpert(expert, userMessage, history) {
 
   // 原子写入：先写 .tmp 再 rename
   const tmpFile = historyFile + '.tmp'
-  fs.writeFileSync(tmpFile, JSON.stringify(expertHistory.slice(-30)))
-  fs.renameSync(tmpFile, historyFile)
+  await fs.promises.writeFile(tmpFile, JSON.stringify(expertHistory.slice(-30)))
+  await fs.promises.rename(tmpFile, historyFile)
 
   return sanitizeOutput(finalContent)
 }

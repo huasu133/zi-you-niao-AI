@@ -183,7 +183,9 @@ app.post('/chat', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
-    req.setTimeout(180000)
+    req.setTimeout(180000, () => {
+      req.destroy(new Error('请求超时(180s)'))
+    })
 
     const requestedExpert = EXPERTS.find(e => e.pattern.test(message))
     if (requestedExpert) {
