@@ -5,226 +5,465 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>自由鸟</title>
 <style>
+/* ===== Design Tokens ===== */
+:root {
+  --c-primary: #4A6CF7;
+  --c-primary-hover: #3B5DE7;
+  --c-primary-bg: #EEF1FE;
+  --c-bg: #FFFFFF;
+  --c-sidebar: #F8F9FB;
+  --c-divider: #E8ECF1;
+  --c-card: #F5F6F8;
+  --c-text: #1A1D26;
+  --c-text-secondary: #6B7280;
+  --c-text-tertiary: #9CA3AF;
+  --c-success: #22C55E;
+  --c-warning: #F59E0B;
+  --c-error: #EF4444;
+  --c-white: #FFFFFF;
+  --c-active-bg: #EEF1FE;
+  --c-active-border: #4A6CF7;
+  --c-hover-bg: #F0F1F3;
+
+  --radius-input: 16px;
+  --radius-bubble: 12px;
+  --radius-card: 10px;
+  --radius-btn: 8px;
+  --radius-nav: 8px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+
+  --shadow-micro: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-light: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-focus: 0 2px 8px rgba(74,108,247,0.15);
+  --shadow-modal: 0 4px 16px rgba(0,0,0,0.10);
+
+  --font-title: 16px;
+  --font-body: 14px;
+  --font-small: 13px;
+  --font-caption: 12px;
+  --font-micro: 11px;
+
+  --sidebar-w: 220px;
+  --rightpanel-w: 260px;
+  --detailpanel-w: 280px;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; }
+body {
+  display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: var(--c-bg); color: var(--c-text); overflow: hidden; font-size: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
 
-.sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow-y: auto; }
-.logo { padding: 20px; font-size: 18px; font-weight: 600; color: #4a6cf7; border-bottom: 1px solid #e0e0e0; }
-.nav-item { padding: 12px 20px; cursor: pointer; color: #555; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-.nav-item:hover { background: #f0f4ff; color: #4a6cf7; }
-.nav-item.active { background: #f0f4ff; color: #4a6cf7; font-weight: 500; }
-.nav-status { margin-left: auto; font-size: 11px; color: #999; }
-.nav-divider { display: flex; align-items: center; gap: 8px; padding: 12px 20px 6px; font-size: 11px; color: #999; text-transform: uppercase; }
-.session-list { display: flex; flex-direction: column; }
-.session-item { padding: 10px 20px; cursor: pointer; color: #555; font-size: 13px; display: flex; align-items: center; gap: 8px; }
-.session-item:hover { background: #f0f4ff; }
-.session-item.active { background: #f0f4ff; color: #4a6cf7; font-weight: 500; }
-.session-close { margin-left: auto; font-size: 14px; color: #ccc; cursor: pointer; padding: 0 4px; display: none; }
-.session-item:hover .session-close { display: block; }
-.session-close:hover { color: #e74c3c; }
-.btn-new-session { margin: 8px 12px; padding: 8px; background: #4a6cf7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: center; }
-.btn-new-session:hover { background: #3b5de7; }
+/* ===== 左侧边栏 ===== */
+.sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--c-sidebar); border-right: 1px solid var(--c-divider); display: flex; flex-direction: column; user-select: none; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; padding: var(--space-md) 0 0; min-height: 0; }
+.btn-new-top { margin: 0 var(--space-md) var(--space-lg); height: 40px; background: var(--c-primary); color: var(--c-white); border: none; border-radius: var(--radius-btn); cursor: pointer; font-size: var(--font-small); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: var(--space-sm); transition: background 0.15s; }
+.btn-new-top:hover { background: var(--c-primary-hover); }
+.nav-item { height: 36px; padding: 0 var(--space-md); cursor: pointer; color: var(--c-text-secondary); font-size: var(--font-body); display: flex; align-items: center; gap: var(--space-sm); border-radius: var(--radius-nav); margin: 1px var(--space-sm); transition: all 0.15s; position: relative; }
+.nav-item:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.nav-item.active { background: var(--c-primary-bg); color: var(--c-primary); font-weight: 600; }
+.nav-item.active::before { content: ''; position: absolute; left: -12px; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; background: var(--c-primary); border-radius: 2px; }
+.nav-icon { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-badge { font-size: var(--font-micro); color: var(--c-text-secondary); background: #E5E7EB; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; }
+.nav-divider { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-md) var(--space-md) var(--space-sm); font-size: var(--font-micro); color: var(--c-text-tertiary); font-weight: 600; letter-spacing: 0.5px; border-top: 1px solid var(--c-divider); margin-top: auto; }
+.session-list { overflow-y: auto; flex: 1; min-height: 0; padding: 0; }
+.session-item { height: 32px; padding: 0 var(--space-md); cursor: pointer; color: var(--c-text-secondary); font-size: var(--font-caption); display: flex; align-items: center; gap: var(--space-sm); border-radius: var(--radius-sm); margin: 1px var(--space-sm); transition: all 0.15s; }
+.session-item:hover { background: var(--c-hover-bg); }
+.session-item.active { background: var(--c-primary-bg); color: var(--c-primary); font-weight: 500; }
+.session-close { margin-left: auto; font-size: 14px; color: transparent; cursor: pointer; padding: 0 4px; border-radius: 3px; transition: color 0.15s; }
+.session-item:hover .session-close { color: var(--c-text-tertiary); }
+.session-close:hover { color: var(--c-error); background: #FDE8E8; }
+.btn-new-session { margin: var(--space-xs) var(--space-md) var(--space-lg); height: 32px; background: transparent; color: var(--c-primary); border: 1px dashed #C5D0F0; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-caption); text-align: center; transition: all 0.15s; }
+.btn-new-session:hover { background: var(--c-primary-bg); border-color: var(--c-primary); }
 
-.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* ===== 中间主区域 ===== */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--c-bg); }
 .tab-content { flex: 1; display: none; flex-direction: column; }
 .tab-content.active { display: flex; }
 
-.chat-messages { flex: 1; overflow: auto; padding: 20px; }
-.chat-input-area { padding: 12px 20px; border-top: 1px solid #e0e0e0; background: #fff; }
-.chat-toolbar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-.toolbar-select { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #fff; color: #333; cursor: pointer; }
-.chat-input { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; font-size: 14px; font-family: inherit; }
-.chat-actions { display: flex; gap: 8px; margin-top: 8px; }
-.btn-primary { flex: 1; padding: 8px; background: #4a6cf7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-secondary { padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
-.msg { margin: 10px 0; padding: 10px 14px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; font-size: 14px; }
-.msg-user { background: #f0f4ff; margin-left: 40px; }
-.msg-ai { background: #fff; border: 1px solid #e0e0e0; margin-right: 40px; }
-.msg-system { background: #fff3cd; color: #856404; font-size: 13px; text-align: center; }
-.welcome { text-align: center; color: #999; padding: 60px 20px; font-size: 16px; line-height: 1.8; }
+/* 顶部工具栏 */
+.chat-toolbar { display: flex; align-items: center; gap: 2px; padding: var(--space-sm) var(--space-2xl); background: var(--c-bg); border-bottom: 1px solid var(--c-divider); flex-shrink: 0; position: relative; }
+.toolbar-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); transition: all 0.15s; font-size: 16px; }
+.toolbar-btn:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.toolbar-btn.active { background: var(--c-primary-bg); color: var(--c-primary); }
+.toolbar-spacer { flex: 1; }
 
-.connector-list { padding: 20px; }
-.connector-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-.connector-dot { width: 10px; height: 10px; border-radius: 50%; }
-.connector-name { font-size: 14px; font-weight: 500; }
-.connector-status { font-size: 12px; color: #999; }
+/* 搜索栏（默认隐藏，点搜索图标展开） */
+.chat-search { padding: var(--space-sm) var(--space-2xl) var(--space-sm); background: var(--c-bg); border-bottom: 1px solid var(--c-divider); flex-shrink: 0; position: relative; display: none; }
+.chat-search.open { display: block; }
+.search-bar { display: flex; align-items: center; gap: var(--space-sm); background: var(--c-card); border: 1.5px solid transparent; border-radius: var(--radius-input); padding: 4px var(--space-sm); transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+.search-bar:focus-within { border-color: var(--c-primary); box-shadow: var(--shadow-focus); background: var(--c-bg); }
+.search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: var(--font-small); font-family: inherit; color: var(--c-text); padding: 2px 0; }
+.search-bar input::placeholder { color: var(--c-text-tertiary); }
+.search-action-btn { width: 28px; height: 28px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); transition: all 0.15s; font-size: 14px; }
+.search-action-btn:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--c-white); border: 1px solid var(--c-divider); border-radius: var(--radius-card); box-shadow: var(--shadow-modal); max-height: 300px; overflow-y: auto; z-index: 1000; display: none; }
+.search-result-item { padding: var(--space-sm) var(--space-md); cursor: pointer; font-size: var(--font-small); color: var(--c-text); border-bottom: 1px solid var(--c-divider); }
+.search-result-item:hover { background: var(--c-primary-bg); }
+.search-result-item:last-child { border-bottom: none; }
 
-.settings-panel { padding: 20px; max-width: 500px; }
-.setting-row { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-.setting-label { font-size: 13px; color: #666; margin-bottom: 4px; }
-.setting-value { font-size: 14px; }
+/* 历史提问下拉 */
+.history-dropdown { position: absolute; top: 100%; right: 0; width: 340px; max-height: 400px; overflow-y: auto; background: var(--c-white); border: 1px solid var(--c-divider); border-radius: var(--radius-card); box-shadow: var(--shadow-modal); z-index: 1000; display: none; }
+.history-dropdown.open { display: block; }
+.history-dd-header { padding: var(--space-md) var(--space-lg); font-size: var(--font-small); font-weight: 600; color: var(--c-text); border-bottom: 1px solid var(--c-divider); position: sticky; top: 0; background: var(--c-white); display: flex; align-items: center; gap: var(--space-sm); }
+.history-dd-count { font-size: var(--font-micro); font-weight: 400; color: var(--c-text-tertiary); }
+.history-dd-item { padding: var(--space-sm) var(--space-lg); cursor: pointer; font-size: var(--font-small); color: var(--c-text); border-bottom: 1px solid var(--c-divider); display: flex; align-items: flex-start; gap: var(--space-sm); transition: background 0.1s; }
+.history-dd-item:hover { background: var(--c-primary-bg); }
+.history-dd-item:last-child { border-bottom: none; }
+.history-dd-role { flex-shrink: 0; font-size: 14px; width: 22px; text-align: center; }
+.history-dd-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text-secondary); line-height: 1.4; }
+.history-dd-time { flex-shrink: 0; font-size: var(--font-micro); color: var(--c-text-tertiary); }
 
+.chat-messages { flex: 1; overflow-y: auto; padding: var(--space-xl) var(--space-2xl); }
+
+/* ===== 底部输入栏 ===== */
+.chat-input-area { padding: var(--space-md) var(--space-xl) var(--space-lg); background: var(--c-bg); border-top: 1px solid var(--c-divider); flex-shrink: 0; }
+.input-bar { display: flex; align-items: center; gap: var(--space-sm); background: var(--c-card); border: 1.5px solid transparent; border-radius: var(--radius-input); padding: 6px var(--space-sm); transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+.input-bar:focus-within { border-color: var(--c-primary); box-shadow: var(--shadow-focus); background: var(--c-bg); }
+.input-divider { width: 1px; height: 24px; background: var(--c-divider); flex-shrink: 0; }
+.model-select { padding: 2px var(--space-sm); border: none; background: transparent; color: var(--c-primary); border-radius: var(--radius-sm); font-size: var(--font-small); font-weight: 600; cursor: pointer; outline: none; white-space: nowrap; min-width: 130px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A6CF7' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; padding-right: 20px; }
+.model-select:hover { background-color: var(--c-primary-bg); }
+.model-select.sm { min-width: auto; background-image: none; padding-right: 8px; font-weight: 400; color: var(--c-text-secondary); }
+.input-bar textarea { flex: 1; border: none; background: transparent; outline: none; font-size: var(--font-small); font-family: inherit; color: var(--c-text); resize: none; min-height: 28px; max-height: 160px; line-height: 1.5; padding: 2px 0; }
+.input-bar textarea::placeholder { color: var(--c-text-tertiary); }
+.input-actions { display: flex; align-items: center; gap: 2px; }
+.input-action-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); transition: all 0.15s; font-size: 16px; }
+.input-action-btn:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.input-status { display: flex; align-items: center; gap: 4px; padding: 0 var(--space-xs); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-dot.online { background: var(--c-success); box-shadow: 0 0 4px rgba(34,197,94,0.4); }
+.status-dot.offline { background: var(--c-error); }
+.send-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); transition: all 0.2s; }
+.send-btn.active { background: var(--c-primary); color: var(--c-white); }
+.send-btn.active:hover { background: var(--c-primary-hover); }
+.send-btn:disabled { cursor: default; }
+
+/* ===== 右侧列表面板（可折叠） ===== */
+.right-panel { width: var(--rightpanel-w); min-width: var(--rightpanel-w); background: var(--c-sidebar); border-left: 1px solid var(--c-divider); display: flex; flex-direction: column; overflow: hidden; transition: width 0.25s ease, min-width 0.25s ease; }
+.right-panel.collapsed { width: 42px; min-width: 42px; }
+.right-toggle { height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--c-text-tertiary); font-size: 14px; border-bottom: 1px solid var(--c-divider); flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+.right-toggle:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.right-toggle-icon { transition: transform 0.25s; }
+.right-panel.collapsed .right-toggle-icon { transform: rotate(180deg); }
+.right-icons { display: none; flex-direction: column; align-items: center; padding: var(--space-sm) 0; gap: var(--space-xs); }
+.right-panel.collapsed .right-icons { display: flex; }
+.right-panel.collapsed .panel-section { display: none; }
+.right-icon-btn { width: 36px; height: 36px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--c-text-secondary); transition: all 0.15s; position: relative; }
+.right-icon-btn:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+.right-icon-btn.active { background: var(--c-primary-bg); color: var(--c-primary); }
+.right-icon-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--c-primary); display: none; }
+.right-icon-dot.show { display: block; }
+.panel-section { border-bottom: 1px solid var(--c-divider); }
+.panel-header { display: flex; align-items: center; gap: var(--space-sm); height: 40px; padding: 0 var(--space-lg); font-size: var(--font-small); font-weight: 600; color: var(--c-text); cursor: pointer; user-select: none; transition: background 0.15s; }
+.panel-header:hover { background: var(--c-primary-bg); }
+.panel-header .header-count { margin-left: auto; font-size: var(--font-micro); font-weight: 400; color: var(--c-text-tertiary); margin-right: 4px; }
+.panel-toggle { font-size: 10px; color: var(--c-text-tertiary); transition: transform 0.2s; }
+.panel-toggle.collapsed { transform: rotate(-90deg); }
+.panel-body { overflow-y: auto; transition: max-height 0.25s ease; max-height: 400px; }
+.panel-body.hidden { max-height: 0; overflow: hidden; }
+.panel-list { padding: var(--space-xs) 0 var(--space-sm); }
+
+/* WorkBuddy 风格产物项目 */
+.artifact-item { height: 32px; padding: 0 var(--space-lg); display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption); color: var(--c-text-secondary); cursor: pointer; transition: background 0.15s; }
+.artifact-item:hover { background: var(--c-hover-bg); }
+.artifact-item:active { background: var(--c-primary-bg); }
+.artifact-icon { flex-shrink: 0; font-size: 14px; width: 18px; text-align: center; }
+.artifact-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text); }
+.artifact-size { font-size: var(--font-micro); color: var(--c-text-tertiary); flex-shrink: 0; }
+
+/* WorkBuddy 风格任务项目 */
+.task-item { height: 30px; padding: 0 var(--space-lg); display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption); color: var(--c-text-secondary); cursor: pointer; transition: background 0.15s; }
+.task-item:hover { background: var(--c-hover-bg); }
+.task-check { width: 16px; height: 16px; border: 1.5px solid #D1D5DB; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 10px; color: transparent; }
+.task-check.checked { border-color: var(--c-primary); background: var(--c-primary); color: var(--c-white); }
+.task-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-label.done { text-decoration: line-through; opacity: 0.5; }
+
+.panel-empty { padding: var(--space-md) var(--space-lg); color: var(--c-text-tertiary); font-size: var(--font-caption); text-align: center; }
+
+/* ===== 最右侧详情预览面板 ===== */
+.detail-preview { width: var(--detailpanel-w); min-width: var(--detailpanel-w); background: var(--c-sidebar); border-left: 1px solid var(--c-divider); display: flex; flex-direction: column; overflow: hidden; transition: width 0.25s ease, min-width 0.25s ease; }
+.detail-preview.collapsed { width: 0; min-width: 0; border-left: none; }
+.detail-preview .panel-header { cursor: default; }
+.detail-preview .panel-header:hover { background: transparent; }
+.detail-preview .panel-body { flex: 1; max-height: none; display: flex; flex-direction: column; }
+.preview-empty { padding: var(--space-2xl) var(--space-lg); color: var(--c-text-tertiary); font-size: var(--font-caption); text-align: center; line-height: 1.8; }
+.preview-empty-icon { font-size: 32px; margin-bottom: var(--space-sm); opacity: 0.4; }
+.preview-file-name { padding: var(--space-md) var(--space-lg); font-size: var(--font-small); font-weight: 600; color: var(--c-text); border-bottom: 1px solid var(--c-divider); word-break: break-all; }
+.preview-content { padding: var(--space-md) var(--space-lg); overflow-y: auto; flex: 1; font-size: var(--font-small); color: var(--c-text-secondary); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.detail-empty { padding: var(--space-md) var(--space-lg); color: var(--c-text-tertiary); font-size: var(--font-caption); text-align: center; }
+.detail-row { padding: var(--space-sm) var(--space-lg); font-size: var(--font-caption); color: var(--c-text-secondary); display: flex; flex-direction: column; gap: 2px; }
+.detail-row:not(:last-child) { border-bottom: 1px solid var(--c-divider); }
+.detail-label { font-size: var(--font-micro); color: var(--c-text-tertiary); font-weight: 500; }
+.detail-value { color: var(--c-text); font-size: var(--font-small); word-break: break-all; }
+
+/* ===== WorkBuddy 风格消息区 ===== */
+.msg { margin: var(--space-md) 0; display: flex; gap: var(--space-sm); }
+.msg.user { flex-direction: row-reverse; }
+.msg-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.msg-avatar.user { background: var(--c-primary-bg); }
+.msg-avatar.ai { background: var(--c-card); }
+.msg-row { display: flex; flex-direction: column; max-width: 75%; }
+.msg.user .msg-row { align-items: flex-end; }
+.msg-bubble { padding: 10px 14px; border-radius: var(--radius-bubble); font-size: var(--font-body); line-height: 1.65; word-break: break-word; }
+.msg.user .msg-bubble { background: var(--c-primary); color: var(--c-white); border-bottom-right-radius: 4px; }
+.msg.ai .msg-bubble { background: var(--c-card); color: var(--c-text); border-bottom-left-radius: 4px; }
+.msg-tail { display: flex; align-items: center; gap: var(--space-sm); margin-top: 4px; }
+.msg-time { font-size: var(--font-micro); color: var(--c-text-tertiary); }
+.msg.user .msg-tail { justify-content: flex-end; }
+
+/* 操作按钮行 — WorkBuddy 风格 */
+.msg-toolbar { display: none; gap: 2px; }
+.msg.ai:hover .msg-toolbar { display: flex; }
+.msg-tool-btn { width: 24px; height: 24px; border: none; background: transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); font-size: 12px; transition: all 0.15s; }
+.msg-tool-btn:hover { background: var(--c-primary-bg); color: var(--c-primary); }
+
+/* 代码块 */
+.msg-bubble code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 3px; font-size: var(--font-small); font-family: 'Consolas', 'Monaco', monospace; }
+.msg.user .msg-bubble code { background: rgba(255,255,255,0.2); }
+.msg-bubble pre { background: #1E1E1E; color: #D4D4D4; padding: var(--space-md) var(--space-lg); border-radius: 8px; overflow-x: auto; font-size: var(--font-small); line-height: 1.5; margin: var(--space-sm) 0; }
+.msg-bubble pre code { background: none; padding: 0; color: inherit; }
+
+/* WorkBuddy 工具调用 / 过程消息折叠块 */
+.tool-call-group { margin: var(--space-sm) 0; }
+.tool-call-header { display: flex; align-items: center; gap: var(--space-sm); height: 28px; padding: 0 var(--space-sm); border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s; font-size: var(--font-caption); color: var(--c-text-secondary); }
+.tool-call-header:hover { background: var(--c-hover-bg); }
+.tool-call-header .tc-icon { font-size: 12px; }
+.tool-call-header .tc-label { font-weight: 500; }
+.tool-call-header .tc-count { color: var(--c-text-tertiary); margin-left: auto; font-size: var(--font-micro); }
+.tool-call-header .tc-arrow { font-size: 10px; color: var(--c-text-tertiary); transition: transform 0.2s; }
+.tool-call-header .tc-arrow.open { transform: rotate(90deg); }
+.tool-call-body { display: none; }
+.tool-call-body.open { display: block; }
+.tool-call-item { padding: var(--space-sm) var(--space-md); margin: 2px 0; background: var(--c-bg); border: 1px solid var(--c-divider); border-radius: var(--radius-sm); font-size: var(--font-small); color: var(--c-text-secondary); }
+.tool-call-item .tc-name { font-weight: 500; color: var(--c-text); }
+.tool-call-item .tc-args { color: var(--c-text-tertiary); font-family: 'Consolas', monospace; font-size: var(--font-micro); margin-top: 2px; }
+
+.welcome { text-align: center; color: var(--c-text-tertiary); padding: 80px 20px; font-size: var(--font-small); line-height: 2; }
+.welcome-icon { font-size: 48px; margin-bottom: var(--space-md); }
+
+/* ===== 内容面板 ===== */
+.content-panel { padding: var(--space-xl) var(--space-2xl); }
+.content-title { font-size: var(--font-title); font-weight: 600; margin-bottom: var(--space-lg); color: var(--c-text); }
+.connector-card { background: var(--c-white); border: 1px solid var(--c-divider); border-radius: var(--radius-card); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-md); transition: box-shadow 0.15s; }
+.connector-card:hover { box-shadow: var(--shadow-micro); }
+.connector-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.connector-name { font-size: var(--font-body); font-weight: 500; }
+.connector-status { font-size: var(--font-caption); color: var(--c-text-secondary); margin-top: 2px; }
+
+/* ===== 弹窗 ===== */
 #confirmOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1000; }
-#confirmDialog { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #fff; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1001; }
-#confirmMsg { margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
-.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.btn-deny { padding: 8px 20px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-.btn-allow { padding: 8px 20px; background: #27ae60; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+#confirmDialog { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--c-white); border-radius: var(--radius-card); padding: var(--space-2xl); max-width: 440px; width: 90%; box-shadow: var(--shadow-modal); z-index: 1001; }
+#confirmMsg { margin-bottom: var(--space-lg); font-size: var(--font-body); line-height: 1.6; }
+.confirm-actions { display: flex; gap: var(--space-sm); justify-content: flex-end; }
+.btn-deny { padding: 8px 20px; background: var(--c-error); color: var(--c-white); border: none; border-radius: var(--radius-btn); cursor: pointer; font-size: var(--font-small); }
+.btn-allow { padding: 8px 20px; background: var(--c-success); color: var(--c-white); border: none; border-radius: var(--radius-btn); cursor: pointer; font-size: var(--font-small); }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: var(--c-white); padding: 10px 24px; border-radius: var(--radius-btn); font-size: var(--font-small); z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 .toast.show { opacity: 1; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-text-tertiary); }
+
+/* 搜索高亮动画 */
+.msg-highlight { animation: msgBlink 1.5s ease-in-out 2; border-radius: var(--radius-bubble); }
+@keyframes msgBlink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,108,247,0); }
+  25% { box-shadow: 0 0 0 4px rgba(74,108,247,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(74,108,247,0.15); }
+  75% { box-shadow: 0 0 0 4px rgba(74,108,247,0.3); }
+}
 </style>
 </head>
 <body>
 
+<!-- ========== 左侧边栏 ========== -->
 <div class="sidebar">
-  <div class="logo">自由鸟</div>
-  <div class="nav-item active" data-tab="chat" onclick="switchTab('chat')">💬 对话</div>
-  <div class="nav-item" data-tab="connectors" onclick="switchTab('connectors')">🔌 连接器 <span class="nav-status" id="connectorBadge">0</span></div>
-  <div class="nav-item" data-tab="experts" onclick="switchTab('experts')">👥 专家</div>
-  <div class="nav-item" data-tab="memory" onclick="switchTab('memory')">🧠 记忆</div>
-  <div class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">📋 任务 <span class="nav-status" id="taskBadge">0</span></div>
-  <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">⚙️ 设置</div>
-  <div class="nav-divider">📑 多个任务</div>
-  <div class="session-list" id="sessionList"></div>
-  <button class="btn-new-session" onclick="createSession()">➕ 新建任务</button>
+  <div class="sidebar-nav">
+    <button class="btn-new-top" onclick="createSession()">+ 新建任务</button>
+    <div class="nav-item active" data-tab="chat" onclick="switchTab('chat')"><span class="nav-icon">💬</span><span class="nav-label">助理</span></div>
+    <div class="nav-item" data-tab="experts" onclick="switchTab('experts')"><span class="nav-icon">👥</span><span class="nav-label">专家</span></div>
+    <div class="nav-item" data-tab="skills" onclick="switchTab('skills')"><span class="nav-icon">⚡</span><span class="nav-label">技能</span></div>
+    <div class="nav-item" data-tab="connectors" onclick="switchTab('connectors')"><span class="nav-icon">🔌</span><span class="nav-label">连接器</span><span class="nav-badge" id="connectorBadge">0</span></div>
+    <div class="nav-item" data-tab="automation" onclick="switchTab('automation')"><span class="nav-icon">⏱</span><span class="nav-label">自动化</span></div>
+    <div class="nav-item" data-tab="settings" onclick="switchTab('settings')"><span class="nav-icon">⋯</span><span class="nav-label">更多</span></div>
+    <div class="nav-divider">对话历史</div>
+    <div class="session-list" id="sessionList"></div>
+  </div>
 </div>
 
+<!-- ========== 中间主区域 ========== -->
 <div class="main">
   <div class="tab-content active" id="tab-chat">
+    <div class="chat-toolbar">
+      <div class="toolbar-spacer"></div>
+      <button class="toolbar-btn" id="btnSearch" onclick="toggleSearch()" title="搜索">🔍</button>
+      <button class="toolbar-btn" onclick="toggleRightPanel()" title="产物/任务列表">📋</button>
+      <button class="toolbar-btn" id="btnDetail" onclick="toggleDetailPanel()" title="详情预览">📄</button>
+      <div style="position:relative">
+        <button class="toolbar-btn" id="btnHistory" onclick="toggleHistoryDropdown()" title="历史提问">☰</button>
+        <div class="history-dropdown" id="historyDropdown">
+          <div class="history-dd-header">历史提问 <span class="history-dd-count" id="historyCount">0</span></div>
+          <div id="historyItems"></div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-search" id="chatSearchBar">
+      <div class="search-bar">
+        <input type="text" id="chatSearch" placeholder="搜索对话内容... (输入关键词)">
+        <button class="search-action-btn" onclick="clearSearch()" title="清空">×</button>
+        <button class="search-action-btn" onclick="performSearch()" title="搜索">🔍</button>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
     <div class="chat-messages" id="messages">
-      <div class="welcome">你好，我是自由鸟 AI 总控<br>可以帮你读文件、搜信息、执行任务</div>
+      <div class="welcome"><div class="welcome-icon">🐦</div>你好，我是自由鸟 AI 总控<br><span style="font-size:13px;color:var(--c-text-tertiary)">可以帮你读文件、搜信息、执行任务</span></div>
     </div>
     <div class="chat-input-area">
-      <div class="chat-toolbar">
-        <select class="toolbar-select" id="modelSelect" title="模型选择">
+      <div class="input-bar">
+        <select class="model-select" id="modelSelect" title="模型选择">
           <option value="deepseek-v4-pro">DeepSeek-V4-Pro</option>
           <option value="deepseek-v4-flash">DeepSeek-V4-Flash</option>
         </select>
-        <select class="toolbar-select" id="searchModeSelect" onchange="setSearchMode()" title="搜索模式">
-          <option value="basic">⚡ 快速</option>
-          <option value="deep">🔍 深度</option>
+        <div class="input-divider"></div>
+        <select class="model-select sm" id="searchModeSelect" onchange="setSearchMode()" title="搜索模式">
+          <option value="basic">⚡ 快速</option><option value="deep">🔍 深度</option>
         </select>
-        <span style="flex:1"></span>
-        <span style="font-size:11px;color:#999" id="statusBar">未连接</span>
-      </div>
-      <textarea class="chat-input" id="input" placeholder="跟你的 AI 说话... (Enter 发送, Shift+Enter 换行)" rows="2"></textarea>
-      <div class="chat-actions">
-        <button class="btn-primary" id="sendBtn" onclick="send()">发送</button>
-        <button class="btn-secondary" onclick="clearHistory()">清空</button>
+        <textarea id="input" placeholder="在此输入消息..." rows="1"></textarea>
+        <div class="input-actions">
+          <div class="input-status" title="服务器状态"><div class="status-dot offline" id="statusDot"></div></div>
+          <button class="input-action-btn" title="附件">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="send-btn" id="sendBtn" onclick="send()" title="发送 (Enter)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="tab-content" id="tab-connectors">
-    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">连接器管理</div>
-    <div class="connector-list" id="connectorList">加载中...</div>
-  </div>
-
-  <div class="tab-content" id="tab-experts">
-    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">专家团队</div>
-    <div class="connector-list" id="expertList">加载中...</div>
-  </div>
-
-  <div class="tab-content" id="tab-memory">
-    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">长期记忆</div>
-    <pre class="connector-list" id="memoryContent" style="font-size:13px;line-height:1.8">加载中...</pre>
-  </div>
-
+  <!-- ===== 其他标签页 ===== -->
+  <div class="tab-content" id="tab-connectors"><div class="content-panel"><div class="content-title">连接器</div><div id="connectorList">加载中...</div></div></div>
+  <div class="tab-content" id="tab-experts"><div class="content-panel"><div class="content-title">专家</div><div id="expertList">加载中...</div></div></div>
+  <div class="tab-content" id="tab-skills"><div class="content-panel"><div class="content-title">技能</div><div style="color:var(--c-text-tertiary);font-size:14px">暂无可用技能</div></div></div>
+  <div class="tab-content" id="tab-automation"><div class="content-panel"><div class="content-title">自动化</div><div style="color:var(--c-text-tertiary);font-size:14px">暂无自动化规则</div></div></div>
+  <div class="tab-content" id="tab-memory"><div class="content-panel"><div class="content-title">长期记忆</div><pre id="memoryContent" style="font-size:var(--font-small);line-height:1.8;white-space:pre-wrap;color:var(--c-text-secondary)">加载中...</pre></div></div>
   <div class="tab-content" id="tab-tasks">
-    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;display:flex;gap:10px;align-items:center">
-      <span style="font-size:14px;font-weight:500">任务列表</span>
-      <select id="taskFilter" onchange="loadTasks()" style="margin-left:auto;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
-        <option value="">全部</option><option value="pending">未完成</option><option value="done">已完成</option>
-      </select>
-    </div>
-    <div id="taskList" class="connector-list" style="flex:1;overflow:auto">加载中...</div>
-    <div style="padding:12px 20px;border-top:1px solid #e0e0e0;display:flex;gap:8px;background:#fff">
-      <input id="taskInput" placeholder="新任务... (Enter 添加)" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px" onkeydown="if(event.key==='Enter')addTask()">
-      <button class="btn-primary" onclick="addTask()" style="flex:none;padding:8px 20px">添加</button>
+    <div class="content-panel" style="flex:1;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--space-lg)"><div class="content-title" style="margin-bottom:0">任务列表</div><select id="taskFilter" onchange="loadTasks()" style="margin-left:auto;padding:4px 10px;border:1px solid var(--c-divider);border-radius:var(--radius-sm);font-size:var(--font-small);outline:none"><option value="">全部</option><option value="pending">未完成</option><option value="done">已完成</option></select><span class="nav-badge" id="taskBadge" style="margin:0">0</span></div>
+      <div id="taskList" style="flex:1;overflow:auto">加载中...</div>
+      <div style="padding:var(--space-sm) 0 0;display:flex;gap:var(--space-sm);border-top:1px solid var(--c-divider);margin-top:auto"><input id="taskInput" placeholder="新任务... (Enter 添加)" style="flex:1;padding:8px 12px;border:1px solid var(--c-divider);border-radius:var(--radius-btn);font-size:var(--font-body);outline:none"><button class="send-btn active" onclick="addTask()" style="width:auto;padding:0 16px;font-size:var(--font-small);font-weight:500">添加</button></div>
     </div>
   </div>
-
   <div class="tab-content" id="tab-settings">
-    <div style="padding:15px 20px;border-bottom:1px solid #e0e0e0;font-size:14px;font-weight:500">设置</div>
-    <div class="settings-panel">
-      <div class="setting-row"><div class="setting-label">服务器地址</div><div class="setting-value">http://127.0.0.1:3456</div></div>
-      <div class="setting-row"><div class="setting-label">模型</div><div class="setting-value">DeepSeek</div></div>
-      <div class="setting-row"><div class="setting-label">GitHub</div><div class="setting-value" id="githubStatus">检查中...</div></div>
-      <div class="setting-row"><div class="setting-label">搜索模式</div><div class="setting-value">
-        <select id="searchModeSelect" onchange="toggleSearchMode()" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px">
-          <option value="basic">快速搜索</option><option value="deep">深度搜索</option>
-        </select>
-      </div></div>
+    <div class="content-panel"><div class="content-title">更多</div>
+      <div class="connector-card"><div><div class="connector-name">服务器地址</div><div class="connector-status">http://127.0.0.1:3456</div></div></div>
+      <div class="connector-card"><div><div class="connector-name">模型</div><div class="connector-status">DeepSeek</div></div></div>
+      <div class="connector-card"><div><div class="connector-name">GitHub</div><div class="connector-status" id="githubStatus" style="color:var(--c-text-tertiary)">检查中...</div></div></div>
+      <div class="connector-card" style="display:block"><div class="connector-name" style="margin-bottom:6px">搜索模式</div><select id="searchModeSetting" onchange="toggleSearchMode()" style="padding:6px 10px;border:1px solid var(--c-divider);border-radius:var(--radius-sm);font-size:var(--font-small);width:100%;outline:none"><option value="basic">快速搜索</option><option value="deep">深度搜索</option></select></div>
     </div>
   </div>
 </div>
 
-<div id="confirmOverlay" onclick="confirmAction(false)"></div>
-<div id="confirmDialog">
-  <div id="confirmMsg"></div>
-  <div class="confirm-actions">
-    <button class="btn-deny" onclick="confirmAction(false)">拒绝</button>
-    <button class="btn-allow" onclick="confirmAction(true)">允许</button>
+<!-- ========== 右侧列表面板（产物 + 任务） ========== -->
+<div class="right-panel collapsed" id="rightPanel">
+  <div class="right-toggle" onclick="toggleRightPanel()" title="展开/收起面板">
+    <span class="right-toggle-icon">◀</span>
+  </div>
+  <div class="right-icons">
+    <button class="right-icon-btn active" id="iconProducts" onclick="expandRightPanel('products')" title="产物">📦<span class="right-icon-dot show" id="iconProductsDot"></span></button>
+    <button class="right-icon-btn" id="iconTasks" onclick="expandRightPanel('tasks')" title="任务">📋<span class="right-icon-dot" id="iconTasksDot"></span></button>
+  </div>
+  <div class="panel-section" id="productsSection">
+    <div class="panel-header" onclick="togglePanel('products')">
+      产物 <span class="header-count" id="artifactCount">0</span><span class="panel-toggle" id="productsToggle">▼</span>
+    </div>
+    <div class="panel-body" id="productsBody">
+      <div class="panel-list" id="artifactList"></div>
+    </div>
+  </div>
+  <div class="panel-section" id="tasksSection" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="panel-header" onclick="togglePanel('tasks')">
+      任务 <span class="header-count" id="rightTaskCount">0</span><span class="panel-toggle" id="tasksToggle">▼</span>
+    </div>
+    <div class="panel-body" id="tasksBody" style="flex:1;max-height:none">
+      <div class="panel-list" id="rightTaskList"></div>
+    </div>
   </div>
 </div>
+
+<!-- ========== 最右侧详情预览面板 ========== -->
+<div class="detail-preview collapsed" id="detailPanel">
+  <div class="panel-header" style="border-bottom:1px solid var(--c-divider);justify-content:space-between">
+    <span style="font-size:var(--font-small);font-weight:600">详情预览</span>
+    <button class="toolbar-btn" onclick="toggleDetailPanel()" title="关闭">×</button>
+  </div>
+  <div class="panel-body" id="previewBody">
+    <div class="preview-empty"><div class="preview-empty-icon">📄</div>点击产物或任务<br>查看详情</div>
+  </div>
+</div>
+
+<!-- ===== 弹窗 ===== -->
+<div id="confirmOverlay" onclick="confirmAction(false)"></div>
+<div id="confirmDialog"><div id="confirmMsg"></div><div class="confirm-actions"><button class="btn-deny" onclick="confirmAction(false)">拒绝</button><button class="btn-allow" onclick="confirmAction(true)">允许</button></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// 多任务管理
+// ===== 状态 =====
 let sessions = [{ id: 'main', name: '对话', history: [] }]
 let activeSessionId = 'main'
 let pendingConfirm = null
 const API_TOKEN = 'ziyouniao-local'
+const sessionNames = new Set(['对话'])
 
 function getActive() { return sessions.find(s => s.id === activeSessionId) }
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
+// ===== 会话管理 =====
 function renderSessions() {
-  const list = document.getElementById('sessionList')
-  list.innerHTML = sessions.map(s => `
-    <div class="session-item${s.id === activeSessionId ? ' active' : ''}" onclick="switchSession('${s.id}')">
-      💬 ${escapeHtml(s.name)}<span class="session-close" onclick="event.stopPropagation();deleteSession('${s.id}')">×</span>
-    </div>`).join('')
+  document.getElementById('sessionList').innerHTML = sessions.map(s =>
+    `<div class="session-item${s.id === activeSessionId?' active':''}" onclick="switchSession('${s.id}')">💬 ${escapeHtml(s.name)}<span class="session-close" onclick="event.stopPropagation();deleteSession('${s.id}')">×</span></div>`).join('')
 }
-
 function createSession() {
-  const id = 's' + Date.now()
-  const name = '任务 ' + (sessions.length + 1)
-  sessions.push({ id, name, history: [] })
-  activeSessionId = id
-  renderSessions()
-  renderMessages()
+  let n = 1; while (sessionNames.has('任务 ' + n)) n++
+  const name = '任务 ' + n; const id = 's' + Date.now()
+  sessionNames.add(name); sessions.push({ id, name, history: [] })
+  activeSessionId = id; renderSessions(); renderMessages(); showSessionDetail(id)
+  document.getElementById('input').focus()
 }
-
-function switchSession(id) {
-  activeSessionId = id
-  renderSessions()
-  renderMessages()
-  switchTab('chat')
-}
-
+function switchSession(id) { activeSessionId = id; renderSessions(); renderMessages(); switchTab('chat') }
 function deleteSession(id) {
   if (sessions.length <= 1) return toast('至少保留一个任务')
-  sessions = sessions.filter(s => s.id !== id)
+  const s = sessions.find(x => x.id === id); if (s) sessionNames.delete(s.name)
+  sessions = sessions.filter(x => x.id !== id)
   if (activeSessionId === id) activeSessionId = sessions[0].id
-  renderSessions()
-  renderMessages()
+  renderSessions(); renderMessages(); showSessionDetail(activeSessionId)
 }
 renderSessions()
+showSessionDetail(activeSessionId)
 
-async function api(url, opts = {}) {
-  opts.headers = { ...opts.headers, 'X-API-Token': API_TOKEN }
-  return fetch(url, opts)
-}
+// ===== API =====
+async function api(url, opts = {}) { opts.headers = { ...opts.headers, 'X-API-Token': API_TOKEN }; return fetch(url, opts) }
+function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000) }
 
-function escapeHtml(text) {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
-}
-
-function toast(msg) {
-  const el = document.getElementById('toast')
-  el.textContent = msg
-  el.classList.add('show')
-  setTimeout(() => el.classList.remove('show'), 2000)
-}
-
+// ===== 标签切换 =====
 function switchTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'))
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
-  document.getElementById('tab-' + name).classList.add('active')
-  document.querySelector(`.nav-item[data-tab="${name}"]`).classList.add('active')
+  const tab = document.getElementById('tab-' + name); if (tab) tab.classList.add('active')
+  const nav = document.querySelector(`.nav-item[data-tab="${name}"]`); if (nav) nav.classList.add('active')
   if (name === 'connectors') loadConnectors()
   if (name === 'experts') loadExperts()
   if (name === 'memory') loadMemory()
@@ -232,142 +471,226 @@ function switchTab(name) {
   if (name === 'settings') loadSettings()
 }
 
+// ===== 右侧面板 =====
+function togglePanel(name) {
+  const body = document.getElementById(name + 'Body')
+  const toggle = document.getElementById(name + 'Toggle')
+  if (!body || !toggle) return; body.classList.toggle('hidden'); toggle.classList.toggle('collapsed')
+}
+function toggleRightPanel() {
+  const panel = document.getElementById('rightPanel')
+  panel.classList.toggle('collapsed')
+  document.getElementById('btnDetail')?.classList.toggle('active', !panel.classList.contains('collapsed'))
+}
+function expandRightPanel(section) {
+  const panel = document.getElementById('rightPanel')
+  panel.classList.remove('collapsed')
+  document.getElementById('btnDetail')?.classList.add('active')
+  document.querySelectorAll('.right-icon-btn').forEach(b => b.classList.remove('active'))
+  const iconEl = document.getElementById('icon' + section.charAt(0).toUpperCase() + section.slice(1))
+  if (iconEl) iconEl.classList.add('active')
+}
+
+// ===== 详情预览面板 =====
+function toggleDetailPanel() {
+  const panel = document.getElementById('detailPanel')
+  panel.classList.toggle('collapsed')
+}
+function openDetailPanel() {
+  const panel = document.getElementById('detailPanel')
+  panel.classList.remove('collapsed')
+}
+
+// ===== 搜索栏切换 =====
+function toggleSearch() {
+  const bar = document.getElementById('chatSearchBar')
+  const btn = document.getElementById('btnSearch')
+  bar.classList.toggle('open')
+  btn.classList.toggle('active')
+  if (bar.classList.contains('open')) document.getElementById('chatSearch').focus()
+}
+
+// ===== 历史提问下拉 =====
+function toggleHistoryDropdown() {
+  const dd = document.getElementById('historyDropdown')
+  const btn = document.getElementById('btnHistory')
+  const open = dd.classList.toggle('open')
+  btn.classList.toggle('active', open)
+  if (open) populateHistoryDropdown()
+}
+function populateHistoryDropdown() {
+  const session = getActive()
+  const items = document.getElementById('historyItems')
+  const count = document.getElementById('historyCount')
+  if (!session || session.history.length === 0) {
+    count.textContent = '0'
+    items.innerHTML = '<div class="history-dd-item" style="color:var(--c-text-tertiary);justify-content:center">暂无对话记录</div>'
+    return
+  }
+  count.textContent = session.history.length
+  items.innerHTML = session.history.map((msg, i) => {
+    const isUser = msg.role === 'user'
+    const preview = msg.content.length > 60 ? msg.content.slice(0, 60) + '…' : msg.content
+    return `<div class="history-dd-item" onclick="jumpToMsg(${i});toggleHistoryDropdown()">
+      <span class="history-dd-role">${isUser ? '👤' : '🐦'}</span>
+      <span class="history-dd-text">${escapeHtml(preview)}</span>
+      <span class="history-dd-time">#${i + 1}</span>
+    </div>`
+  }).join('')
+}
+function jumpToMsg(idx) {
+  const msgs = document.querySelectorAll('.msg')
+  if (msgs[idx]) {
+    document.querySelectorAll('.msg-highlight').forEach(el => el.classList.remove('msg-highlight'))
+    msgs[idx].classList.add('msg-highlight')
+    msgs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => msgs[idx].classList.remove('msg-highlight'), 3000)
+  }
+}
+// 点击外部关闭
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#historyDropdown') && !e.target.closest('#btnHistory')) {
+    document.getElementById('historyDropdown').classList.remove('open')
+  }
+})
+
+// 产物示例数据
+const fileIcons = { '.md': '📝', '.js': '📄', '.html': '🌐', '.css': '🎨', '.json': '📋', '.png': '🖼', '.ico': '🖼', '.bat': '⚙️', '.vbs': '⚙️', default: '📄' }
+const sampleArtifacts = [
+  { name: 'PRD_自由鸟_WorkBuddy风格重构.md', size: '21.7K', icon: '📝' },
+  { name: 'index.html', size: '18.2K', icon: '🌐' },
+  { name: 'app.js', size: '13.3K', icon: '📄' },
+  { name: 'package.json', size: '1.3K', icon: '📋' },
+]
+const sampleTasks = [
+  { subject: '完成三栏布局框架', done: true },
+  { subject: '实现底部输入栏组件', done: true },
+  { subject: '消息气泡 WorkBuddy 风格', done: false },
+  { subject: '右侧面板产物列表', done: false },
+  { subject: '工具调用折叠块', done: true },
+]
+
+function renderArtifacts() {
+  const list = document.getElementById('artifactList')
+  list.innerHTML = sampleArtifacts.map(a =>
+    `<div class="artifact-item" onclick="toast('打开: ${a.name}')">
+      <span class="artifact-icon">${a.icon}</span>
+      <span class="artifact-name">${escapeHtml(a.name)}</span>
+      <span class="artifact-size">${a.size}</span>
+    </div>`).join('')
+  document.getElementById('artifactCount').textContent = sampleArtifacts.length
+}
+
+function renderRightTasks() {
+  const list = document.getElementById('rightTaskList')
+  list.innerHTML = sampleTasks.map(t =>
+    `<div class="task-item" onclick="toggleRightTask(this)">
+      <div class="task-check${t.done ? ' checked' : ''}">${t.done ? '✓' : ''}</div>
+      <span class="task-label${t.done ? ' done' : ''}">${escapeHtml(t.subject)}</span>
+    </div>`).join('')
+  document.getElementById('rightTaskCount').textContent = sampleTasks.length
+}
+
+function toggleRightTask(el) {
+  const check = el.querySelector('.task-check')
+  const label = el.querySelector('.task-label')
+  const done = check.classList.toggle('checked')
+  check.textContent = done ? '✓' : ''
+  label.classList.toggle('done')
+}
+
+// ===== API 加载 =====
 async function loadConnectors() {
   try {
-    const res = await api('/connectors')
-    const data = await res.json()
-    const list = document.getElementById('connectorList')
-    list.innerHTML = ''
+    const res = await api('/connectors'); const data = await res.json()
+    const list = document.getElementById('connectorList'); list.innerHTML = ''
     let count = 0
     for (const [name, connected] of Object.entries(data.connectors)) {
       count += connected ? 1 : 0
-      list.innerHTML += `<div class="connector-card">
-        <div class="connector-dot" style="background:${connected ? '#27ae60' : '#ccc'}"></div>
-        <div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">${connected ? '已连接' : '未配置'}</div></div>
-      </div>`
+      list.innerHTML += `<div class="connector-card"><div class="connector-dot" style="background:${connected ? 'var(--c-success)' : 'var(--c-text-tertiary)'}"></div><div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">${connected ? '已连接' : '未配置'}</div></div></div>`
     }
     document.getElementById('connectorBadge').textContent = count
   } catch (_) {}
 }
-
 async function loadExperts() {
   try {
-    const res = await api('/experts')
-    const data = await res.json()
-    const list = document.getElementById('expertList')
-    list.innerHTML = ''
-    for (const name of data.experts) {
-      list.innerHTML += `<div class="connector-card"><div class="connector-dot" style="background:#4a6cf7"></div><div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">在聊天中说"叫${escapeHtml(name)}"来调用</div></div></div>`
-    }
-  } catch (_) {
-    document.getElementById('expertList').innerHTML = '<div class="connector-card">暂无专家</div>'
-  }
+    const res = await api('/experts'); const data = await res.json()
+    const list = document.getElementById('expertList'); list.innerHTML = ''
+    for (const name of data.experts) list.innerHTML += `<div class="connector-card"><div class="connector-dot" style="background:var(--c-primary)"></div><div><div class="connector-name">${escapeHtml(name)}</div><div class="connector-status">在聊天中说"叫${escapeHtml(name)}"来调用</div></div></div>`
+  } catch (_) { document.getElementById('expertList').innerHTML = '<div class="connector-card" style="color:var(--c-text-tertiary)">暂无专家</div>' }
 }
-
 async function loadMemory() {
-  try {
-    const res = await api('/memory')
-    const data = await res.json()
-    document.getElementById('memoryContent').textContent = data.content || '暂无记忆'
-  } catch (_) {}
+  try { const res = await api('/memory'); const data = await res.json(); document.getElementById('memoryContent').textContent = data.content || '暂无记忆' } catch (_) {}
 }
-
 async function loadTasks() {
   try {
     const filter = document.getElementById('taskFilter')?.value || ''
     const res = await api(`/tasks?filter=${filter}`)
     const data = await res.json()
-    const list = document.getElementById('taskList')
-    list.innerHTML = ''
-    if (!data.tasks || data.tasks.length === 0) {
-      list.innerHTML = '<div class="connector-card" style="color:#999">暂无任务</div>'
-      document.getElementById('taskBadge').textContent = '0'
-      return
-    }
+    const list = document.getElementById('taskList'); list.innerHTML = ''
+    if (!data.tasks || data.tasks.length === 0) { list.innerHTML = '<div class="connector-card" style="color:var(--c-text-tertiary)">暂无任务</div>'; document.getElementById('taskBadge').textContent = '0'; return }
     const pending = data.tasks.filter(t => t.status === 'pending').length
     document.getElementById('taskBadge').textContent = pending
     for (const task of data.tasks) {
       const done = task.status === 'completed'
-      list.innerHTML += `<div class="connector-card" style="${done ? 'opacity:0.5' : ''}">
-        <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${task.id.replace(/'/g, "\\'")}', this.checked)" style="width:18px;height:18px">
-        <div style="flex:1">
-          <div class="connector-name" style="${done ? 'text-decoration:line-through' : ''}">${escapeHtml(task.subject)}</div>
-          <div class="connector-status">${escapeHtml(task.description || '')} · ${task.createdAt}</div>
-        </div>
-      </div>`
+      list.innerHTML += `<div class="connector-card" style="${done ? 'opacity:0.5' : ''}"><input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${task.id.replace(/'/g, "\\'")}', this.checked)" style="width:18px;height:18px"><div style="flex:1"><div class="connector-name" style="${done ? 'text-decoration:line-through' : ''}">${escapeHtml(task.subject)}</div><div class="connector-status">${escapeHtml(task.description || '')} · ${task.createdAt}</div></div></div>`
     }
   } catch (_) {}
 }
-
 async function addTask() {
   const input = document.getElementById('taskInput')
   if (!input.value.trim()) return
-  await api('/tasks', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subject: input.value }),
-  })
-  input.value = ''
-  loadTasks()
+  await api('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject: input.value }) })
+  input.value = ''; loadTasks()
 }
-
 async function toggleTask(id, completed) {
-  await api(`/tasks/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: completed ? 'completed' : 'pending' }),
-  })
+  await api(`/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: completed ? 'completed' : 'pending' }) })
   loadTasks()
 }
-
 async function loadSettings() {
   try {
-    const res = await api('/connectors')
-    const data = await res.json()
+    const res = await api('/connectors'); const data = await res.json()
     const gh = data.connectors?.github
-    document.getElementById('githubStatus').textContent = gh ? '已连接' : '未配置'
-    document.getElementById('githubStatus').style.color = gh ? '#27ae60' : '#999'
-    const configRes = await api('/api/config')
-    const config = await configRes.json()
-    document.getElementById('searchModeSelect').value = config.searchMode
+    const el = document.getElementById('githubStatus'); el.textContent = gh ? '已连接' : '未配置'; el.style.color = gh ? 'var(--c-success)' : 'var(--c-text-tertiary)'
+    const configRes = await api('/api/config'); const config = await configRes.json()
+    document.getElementById('searchModeSetting').value = config.searchMode
   } catch (_) {}
 }
-
 async function toggleSearchMode() {
-  const mode = document.getElementById('searchModeSelect').value
-  await api('/api/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ searchMode: mode }),
-  })
+  const mode = document.getElementById('searchModeSetting').value
+  await api('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ searchMode: mode }) })
   toast(mode === 'deep' ? '已切换为深度搜索模式' : '已切换为快速搜索模式')
 }
+async function setSearchMode() {
+  const mode = document.getElementById('searchModeSelect').value
+  await api('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ searchMode: mode }) })
+}
 
-async function setSearchMode() { return toggleSearchMode() }
-
+// ===== 聊天 =====
 async function send() {
-  const msg = document.getElementById('input').value
+  const msg = document.getElementById('input').value.trim()
   if (!msg) return
-  document.getElementById('input').value = ''
-  addMessage('你', msg, 'msg-user')
+  document.getElementById('input').value = ''; document.getElementById('input').style.height = 'auto'
+  const userMsg = addMessage('user', msg)
   getActive().history.push({ role: 'user', content: msg })
-  document.getElementById('sendBtn').disabled = true
-  document.getElementById('sendBtn').textContent = '处理中...'
+  const btn = document.getElementById('sendBtn'); btn.disabled = true; btn.classList.remove('active')
 
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 60000)
     const res = await api('/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, history: getActive().history.slice(-10), model: document.getElementById('modelSelect').value, searchMode: document.getElementById('searchModeSelect').value }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: getActive().history.slice(-10), model: document.getElementById('modelSelect').value }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
     if (!res.ok) throw new Error('请求失败')
 
-    const replyEl = addMessage('自由鸟', '', 'msg-ai')
-    const bodyEl = replyEl.querySelector('.msg-body')
+    // 添加工具调用占位（展示 WorkBuddy 风格）
+    const toolGroup = addToolCallGroup()
+    const aiMsg = addMessage('ai', '')
+    const contentEl = aiMsg.querySelector('.msg-bubble')
+
     const reader = res.body.getReader()
     const decoder = new TextDecoder('utf-8', { stream: true })
     let currentReply = ''
@@ -375,97 +698,277 @@ async function send() {
       const { done, value } = await reader.read()
       if (done) break
       currentReply += decoder.decode(value)
-      bodyEl.textContent = currentReply
-      bodyEl.parentElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      contentEl.textContent = currentReply
+      contentEl.closest('.msg').scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
     getActive().history.push({ role: 'assistant', content: currentReply })
+    showSessionDetail(activeSessionId)
   } catch (e) {
-    addMessage('系统', '错误: ' + e.message, 'msg-system')
+    const container = document.getElementById('messages')
+    const err = document.createElement('div'); err.style.cssText = 'flex:1;text-align:center;color:var(--c-error);font-size:13px;padding:8px;background:#FEF2F2;border-radius:6px;margin:8px 0'
+    err.textContent = '错误: ' + e.message; container.appendChild(err); err.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }
-  document.getElementById('sendBtn').disabled = false
-  document.getElementById('sendBtn').textContent = '发送'
-  switchTab('chat')
+  btn.disabled = false; btn.classList.add('active')
+}
+
+// WorkBuddy 风格工具调用折叠
+function addToolCallGroup() {
+  const container = document.getElementById('messages')
+  const div = document.createElement('div'); div.className = 'tool-call-group'
+  div.innerHTML = `
+    <div class="tool-call-header" onclick="this.querySelector('.tc-body').classList.toggle('open');this.querySelector('.tc-arrow').classList.toggle('open')">
+      <span class="tc-icon">🛠</span><span class="tc-label">工具调用</span><span class="tc-count">3</span><span class="tc-arrow open">▸</span>
+    </div>
+    <div class="tool-call-body tc-body open">
+      <div class="tool-call-item"><div class="tc-name">read_file</div><div class="tc-args">file: "app.js"</div></div>
+      <div class="tool-call-item"><div class="tc-name">search_memory</div><div class="tc-args">query: "用户偏好"</div></div>
+      <div class="tool-call-item"><div class="tc-name">write_file</div><div class="tc-args">file: "index.html"</div></div>
+    </div>`
+  container.appendChild(div)
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  return div
+}
+
+function addMessage(role, content) {
+  const container = document.getElementById('messages')
+  const now = new Date()
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0')
+  const div = document.createElement('div'); div.className = 'msg ' + role
+
+  if (role === 'user') {
+    div.innerHTML = `<div class="msg-row"><div class="msg-bubble">${escapeHtml(content)}</div><div class="msg-tail"><span class="msg-time">${time}</span></div></div><div class="msg-avatar user">👤</div>`
+  } else {
+    div.innerHTML = `<div class="msg-avatar ai">🐦</div><div class="msg-row"><div class="msg-bubble">${escapeHtml(content)}</div><div class="msg-tail"><span class="msg-time">${time}</span><span class="msg-toolbar"><button class="msg-tool-btn" title="复制" onclick="navigator.clipboard.writeText(this.closest('.msg').querySelector('.msg-bubble').textContent);toast('已复制')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="msg-tool-btn" title="赞同">👍</button><button class="msg-tool-btn" title="反对">👎</button><button class="msg-tool-btn" title="重新生成">🔄</button></span></div></div>`
+  }
+  container.appendChild(div)
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  return div
 }
 
 function renderMessages() {
   const container = document.getElementById('messages')
   const session = getActive()
   if (session.history.length === 0) {
-    container.innerHTML = `<div class="welcome">欢迎使用自由鸟 🐦<br>输入消息开始对话<br><br>支持的专家：叫“架构师”/“安全”/“前端”</div>`
-    return
+    container.innerHTML = `<div class="welcome"><div class="welcome-icon">🐦</div>你好，我是自由鸟 AI 总控<br><span style="font-size:13px;color:var(--c-text-tertiary)">可以帮你读文件、搜信息、执行任务</span></div>`; return
   }
   container.innerHTML = ''
-  for (const msg of session.history) {
-    const who = msg.role === 'user' ? '你' : '自由鸟'
-    const cls = msg.role === 'user' ? 'msg-user' : 'msg-ai'
-    addMessage(who, msg.content, cls)
-  }
+  for (const msg of session.history) addMessage(msg.role === 'user' ? 'user' : 'ai', msg.content)
 }
-
-function addMessage(who, text, cls) {
-  const div = document.createElement('div')
-  div.className = 'msg ' + cls
-  const now = new Date()
-  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0')
-  div.innerHTML = `<span style="font-size:11px;color:#999;margin-right:6px">${time}</span><span class="msg-body">${escapeHtml(who)}: ${escapeHtml(text).replace(/\n/g, '<br>')}</span>`
-  document.getElementById('messages').appendChild(div)
-  div.scrollIntoView()
-  return div
-}
-
-function clearHistory() {
-  history = []
-  document.getElementById('messages').innerHTML = '<div class="welcome">对话已清空，记忆仍然保留</div>'
-}
+function clearHistory() { getActive().history = []; renderMessages(); showSessionDetail(activeSessionId); toast('对话已清空') }
 
 function showConfirm(msg, callback) {
   document.getElementById('confirmMsg').textContent = msg
   document.getElementById('confirmOverlay').style.display = 'block'
   document.getElementById('confirmDialog').style.display = 'block'
-  document.body.style.overflow = 'hidden'
   pendingConfirm = callback
 }
-
 function confirmAction(approved) {
   document.getElementById('confirmOverlay').style.display = 'none'
   document.getElementById('confirmDialog').style.display = 'none'
-  document.body.style.overflow = ''
-  if (pendingConfirm) pendingConfirm(approved)
-  pendingConfirm = null
+  if (pendingConfirm) pendingConfirm(approved); pendingConfirm = null
 }
 
-// 键盘支持
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && pendingConfirm !== null) {
-    confirmAction(false)
-  }
-})
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && pendingConfirm !== null) confirmAction(false) })
 
-// Enter 发送
-document.getElementById('input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault()
-    send()
-  }
+const inputArea = document.getElementById('input')
+inputArea.addEventListener('input', function() {
+  this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 160) + 'px'
+  const btn = document.getElementById('sendBtn')
+  if (this.value.trim()) { btn.disabled = false; btn.classList.add('active') }
+  else { btn.disabled = true; btn.classList.remove('active') }
 })
+inputArea.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
 
-// 状态轮询
+// ===== 初始化 =====
 let pollInterval = 5000
 function pollHealth() {
-  api('/health').then(res => {
-    if (res.ok) {
-      document.getElementById('statusBar').textContent = '✅ 运行中'
-      pollInterval = 5000
-    }
-  }).catch(() => {
-    document.getElementById('statusBar').textContent = '❌ 离线'
-    pollInterval = Math.min(pollInterval * 2, 60000)
-  })
+  api('/health').then(r => { if (r.ok) { document.getElementById('statusDot').className = 'status-dot online'; pollInterval = 5000 } }).catch(() => { document.getElementById('statusDot').className = 'status-dot offline'; pollInterval = Math.min(pollInterval * 2, 60000) })
   setTimeout(pollHealth, pollInterval)
 }
 setTimeout(pollHealth, 5000)
-loadConnectors()
-loadSettings()
+renderArtifacts()
+renderRightTasks()
+loadConnectors(); loadSettings()
+
+// ===== 对话内搜索 =====
+function performSearch() {
+  const keyword = document.getElementById('chatSearch').value.trim().toLowerCase()
+  if (!keyword) { document.getElementById('searchResults').style.display = 'none'; return }
+  const session = getActive()
+  if (!session || session.history.length === 0) return
+  const results = []
+  session.history.forEach((msg, i) => {
+    const content = msg.content.toLowerCase()
+    let pos = 0, idx = 0
+    while ((idx = content.indexOf(keyword, pos)) !== -1) {
+      const start = Math.max(0, idx - 20)
+      const end = Math.min(content.length, idx + keyword.length + 30)
+      let snippet = content.slice(start, end)
+      if (start > 0) snippet = '…' + snippet
+      if (end < content.length) snippet = snippet + '…'
+      results.push({ index: i, role: msg.role, snippet, start, end })
+      pos = idx + 1
+    }
+  })
+  const container = document.getElementById('searchResults')
+  if (results.length === 0) {
+    container.innerHTML = '<div class="search-result-item" style="color:var(--c-text-tertiary)">未找到匹配结果</div>'
+  } else {
+    container.innerHTML = results.slice(0, 20).map((r, ri) =>
+      `<div class="search-result-item" onclick="goToMessage(${r.index}, ${ri})">
+        <span style="color:var(--c-primary);font-weight:600;margin-right:6px">${r.role === 'user' ? '👤' : '🐦'}</span>
+        ${escapeHtml(r.snippet)}
+      </div>`).join('')
+  }
+  container.style.display = 'block'
+}
+
+function clearSearch() {
+  document.getElementById('chatSearch').value = ''
+  document.getElementById('searchResults').style.display = 'none'
+  // 移除所有高亮
+  document.querySelectorAll('.msg-highlight').forEach(el => el.classList.remove('msg-highlight'))
+}
+
+function goToMessage(idx, resultIdx) {
+  const msgs = document.querySelectorAll('.msg')
+  if (msgs[idx]) {
+    document.querySelectorAll('.msg-highlight').forEach(el => el.classList.remove('msg-highlight'))
+    msgs[idx].classList.add('msg-highlight')
+    msgs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 闪烁动画
+    setTimeout(() => msgs[idx].classList.remove('msg-highlight'), 3000)
+  }
+  document.getElementById('searchResults').style.display = 'none'
+}
+
+// Enter触发搜索
+document.getElementById('chatSearch').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') performSearch()
+})
+// 点击外部关闭搜索结果
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.chat-search')) document.getElementById('searchResults').style.display = 'none'
+})
+
+// ===== 历史提问详情 =====
+// 增强切换会话时的行为，显示历史摘要
+const origSwitchSession = switchSession
+switchSession = function(id) {
+  origSwitchSession(id)
+  showSessionDetail(id)
+}
+
+function showSessionDetail(sessionId) {
+  const s = sessions.find(x => x.id === sessionId)
+  const preview = document.getElementById('previewBody')
+  if (!s || !s.history || s.history.length === 0) {
+    preview.innerHTML = '<div class="preview-empty"><div class="preview-empty-icon">📄</div>暂无历史提问</div>'
+    return
+  }
+  const recentQs = s.history.filter(m => m.role === 'user').slice(-5).reverse()
+  let html = `<div class="preview-file-name">历史提问 · ${escapeHtml(s.name)}</div><div class="preview-content">`
+  recentQs.forEach((q, i) => {
+    const preview = q.content.length > 80 ? q.content.slice(0, 80) + '…' : q.content
+    html += `<div style="margin-bottom:12px;padding:8px 12px;background:var(--c-white);border-radius:8px;border:1px solid var(--c-divider);cursor:pointer" onclick="switchSession('${sessionId}')">
+      <span style="color:var(--c-primary);font-weight:500;font-size:11px">提问 ${recentQs.length - i}</span>
+      <div style="margin-top:4px;color:var(--c-text)">${escapeHtml(preview)}</div>
+    </div>`
+  })
+  html += `<div style="color:var(--c-text-tertiary);font-size:11px;margin-top:8px">共 ${s.history.length} 条消息</div></div>`
+  preview.innerHTML = html
+}
+
+// ===== 详情预览 — 选中产物/任务时展示 =====
+function showArtifactDetail(name, size, icon) {
+  openDetailPanel()
+  const preview = document.getElementById('previewBody')
+  const ext = name.split('.').pop().toLowerCase()
+  const typeMap = { 'md': 'Markdown 文档', 'js': 'JavaScript', 'html': 'HTML 页面', 'css': '样式表', 'json': 'JSON 数据', 'png': 'PNG 图片', 'ico': '图标文件', 'bat': '批处理脚本', 'vbs': 'VBScript 脚本' }
+  const fileType = typeMap[ext] || '文件'
+  const previewable = ['html', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'md', 'js', 'css', 'json', 'txt']
+
+  if (ext === 'html') {
+    // HTML 内嵌预览
+    preview.innerHTML = `
+      <div class="preview-file-name">${icon} ${escapeHtml(name)}</div>
+      <div style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <iframe src="/${escapeHtml(name)}" style="flex:1;width:100%;border:none" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div style="padding:8px;text-align:center;border-top:1px solid var(--c-divider)">
+          <button style="width:100%;height:32px;background:var(--c-primary);color:var(--c-white);border:none;border-radius:var(--radius-btn);cursor:pointer;font-size:var(--font-caption);font-weight:500" onclick="window.open('/${escapeHtml(name)}')">🔗 新窗口打开</button>
+        </div>
+      </div>`
+  } else if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
+    // 图片预览
+    preview.innerHTML = `
+      <div class="preview-file-name">${icon} ${escapeHtml(name)}</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f0f0f0">
+        <img src="/${escapeHtml(name)}" style="max-width:100%;max-height:100%;object-fit:contain">
+      </div>`
+  } else if (['md','js','css','json','txt'].includes(ext)) {
+    // 文本内容预览 — 异步加载
+    preview.innerHTML = `<div class="preview-file-name">${icon} ${escapeHtml(name)}</div><div class="preview-content" style="color:var(--c-text-tertiary)">加载中...</div>`
+    fetch('/' + name).then(r => r.text()).then(text => {
+      preview.innerHTML = `<div class="preview-file-name">${icon} ${escapeHtml(name)}</div><div class="preview-content" style="white-space:pre-wrap;font-family:Consolas,Monaco,monospace;font-size:12px;line-height:1.6">${escapeHtml(text)}</div>`
+    }).catch(() => {
+      preview.innerHTML = `<div class="preview-file-name">${icon} ${escapeHtml(name)}</div><div class="preview-content" style="color:var(--c-error)">加载失败</div>`
+    })
+  } else {
+    // 非预览文件
+    preview.innerHTML = `
+      <div class="preview-file-name">${icon} ${escapeHtml(name)}</div>
+      <div class="preview-content">
+        <div class="detail-row"><span class="detail-label">类型</span><span class="detail-value">${fileType}</span></div>
+        <div class="detail-row"><span class="detail-label">大小</span><span class="detail-value">${size}</span></div>
+        <div class="detail-row"><span class="detail-label">位置</span><span class="detail-value">F:/ziyouniao/public/</span></div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn-new-top" style="width:100%" onclick="toast('下载: ${escapeHtml(name)}')">⬇ 下载文件</button>
+          <button style="width:100%;height:36px;background:transparent;color:var(--c-primary);border:1px solid var(--c-primary);border-radius:var(--radius-btn);cursor:pointer;font-size:var(--font-small);font-weight:500" onclick="toast('已复制路径')">📋 复制路径</button>
+        </div>
+      </div>`
+  }
+}
+
+function showTaskDetail(subject, done) {
+  openDetailPanel()
+  const preview = document.getElementById('previewBody')
+  preview.innerHTML = `
+    <div class="preview-file-name">📋 ${escapeHtml(subject)}</div>
+    <div class="preview-content">
+      <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value" style="color:${done ? 'var(--c-success)' : 'var(--c-warning)'}">${done ? '✅ 已完成' : '⏳ 进行中'}</span></div>
+      <div class="detail-row"><span class="detail-label">创建时间</span><span class="detail-value">${new Date().toLocaleDateString()}</span></div>
+      <div class="detail-row"><span class="detail-label">描述</span><span class="detail-value">${done ? '任务已完成' : '正在进行中，尚未完成'}</span></div>
+      <div style="margin-top:16px">
+        <button class="btn-new-top" style="width:100%" onclick="toast('删除任务')">🗑 删除任务</button>
+      </div>
+    </div>`
+}
+
+// 覆盖产物和任务的点击事件
+renderArtifacts = function() {
+  const list = document.getElementById('artifactList')
+  list.innerHTML = sampleArtifacts.map(a =>
+    `<div class="artifact-item" onclick="showArtifactDetail('${a.name.replace(/'/g, "\\'")}', '${a.size}', '${a.icon}')">
+      <span class="artifact-icon">${a.icon}</span>
+      <span class="artifact-name">${escapeHtml(a.name)}</span>
+      <span class="artifact-size">${a.size}</span>
+    </div>`).join('')
+  document.getElementById('artifactCount').textContent = sampleArtifacts.length
+}
+
+renderRightTasks = function() {
+  const list = document.getElementById('rightTaskList')
+  list.innerHTML = sampleTasks.map(t =>
+    `<div class="task-item" onclick="showTaskDetail('${t.subject.replace(/'/g, "\\'")}', ${t.done})">
+      <div class="task-check${t.done ? ' checked' : ''}">${t.done ? '✓' : ''}</div>
+      <span class="task-label${t.done ? ' done' : ''}">${escapeHtml(t.subject)}</span>
+    </div>`).join('')
+  document.getElementById('rightTaskCount').textContent = sampleTasks.length
+}
+
+// 重新渲染产物和任务以应用新的点击事件
+renderArtifacts()
+renderRightTasks()
 </script>
 </body>
 </html>
