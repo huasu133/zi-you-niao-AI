@@ -356,7 +356,8 @@ function gitSnapshot() {
     console.log('[快照] 已提交并推送:', timestamp)
   })
 }
-gitSnapshot()
+// 延迟10秒首次快照，避免阻塞启动
+setTimeout(gitSnapshot, 10000)
 setInterval(gitSnapshot, 60 * 60 * 1000)
 
 // 优雅关闭
