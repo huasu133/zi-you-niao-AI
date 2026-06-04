@@ -123,7 +123,12 @@ body {
 .history-dd-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text-secondary); line-height: 1.4; }
 .history-dd-time { flex-shrink: 0; font-size: var(--font-micro); color: var(--c-text-tertiary); }
 
-.chat-messages { flex: 1; overflow-y: auto; padding: var(--space-xl) var(--space-2xl); }
+.chat-messages { flex: 1; overflow-y: auto; padding: var(--space-xl) var(--space-2xl); scroll-behavior: smooth; }
+
+/* 滚到底部按钮 */
+.scroll-bottom-btn { position: fixed; bottom: 120px; right: calc(var(--rightpanel-w) + var(--detailpanel-w) + 24px); width: 36px; height: 36px; border-radius: 50%; background: var(--c-white); border: 1px solid var(--c-divider); box-shadow: var(--shadow-light); cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--c-text-secondary); z-index: 100; transition: all 0.2s; }
+.scroll-bottom-btn:hover { background: var(--c-primary); color: var(--c-white); border-color: var(--c-primary); }
+.scroll-bottom-btn.show { display: flex; }
 
 /* ===== 底部输入栏 ===== */
 .chat-input-area { padding: var(--space-md) var(--space-xl) var(--space-lg); background: var(--c-bg); border-top: 1px solid var(--c-divider); flex-shrink: 0; }
@@ -334,6 +339,9 @@ body {
     <div class="chat-messages" id="messages">
       <div class="welcome"><div class="welcome-icon">🐦</div>你好，我是自由鸟 AI 总控<br><span style="font-size:13px;color:var(--c-text-tertiary)">可以帮你读文件、搜信息、执行任务</span></div>
     </div>
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" onclick="scrollToBottom()" title="滚到底部">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
     <div class="chat-input-area">
       <div class="input-bar">
         <select class="model-select" id="modelSelect" title="模型选择">
@@ -843,6 +851,17 @@ inputArea.addEventListener('paste', function(e) {
       break
     }
   }
+})
+
+// ===== 滚到底部 =====
+const chatMsg = document.getElementById('messages')
+function scrollToBottom() {
+  chatMsg.scrollTo({ top: chatMsg.scrollHeight, behavior: 'smooth' })
+}
+chatMsg.addEventListener('scroll', function() {
+  const btn = document.getElementById('scrollBottomBtn')
+  const dist = chatMsg.scrollHeight - chatMsg.scrollTop - chatMsg.clientHeight
+  btn.classList.toggle('show', dist > 200)
 })
 
 // ===== 初始化 =====
