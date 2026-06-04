@@ -189,7 +189,7 @@ app.post('/chat', async (req, res) => {
 
     const requestedExpert = EXPERTS.find(e => e.pattern.test(message))
     if (requestedExpert) {
-      const expertReply = await callExpert(requestedExpert, message, history)
+      const expertReply = await callExpert(requestedExpert, message, history, model)
       res.write(`\n[已激活专家: ${requestedExpert.role}]\n`)
       res.write(sanitizeText(expertReply))
       res.end()
@@ -217,11 +217,12 @@ app.post('/chat', async (req, res) => {
       }
       toolCallRounds++
 
+      const model = req.body.model || 'deepseek-v4-pro'
       const noToolsNext = toolCallRounds >= MAX_TOOL_ROUNDS
       if (noToolsNext) { toolsForThisRound = undefined }
 
       const completion = await openai.chat.completions.create({
-        model: 'deepseek-chat',
+        model: model,
         messages,
         tools: toolsForThisRound,
         tool_choice: toolsForThisRound ? 'auto' : undefined,

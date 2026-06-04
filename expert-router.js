@@ -37,7 +37,7 @@ async function getMemoryDesc() {
   return memPart + lessonsPart
 }
 
-async function callExpert(expert, userMessage, history) {
+async function callExpert(expert, userMessage, history, model = 'deepseek-v4-pro') {
   const historyDir = path.join(__dirname, 'memory', 'experts')
   if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true })
 
@@ -95,7 +95,7 @@ async function callExpert(expert, userMessage, history) {
   }
 
   const completion = await llmCall({
-    model: 'deepseek-chat',
+    model: model,
     messages,
     tools: expertToolDefs.map(t => ({ type: t.type, function: t.function })),
     tool_choice: 'auto',
@@ -121,7 +121,7 @@ async function callExpert(expert, userMessage, history) {
     }
     for (let round = 0; round < 3; round++) {
       const next = await llmCall({
-        model: 'deepseek-chat', messages, tools: expertToolDefs.map(t => ({ type: t.type, function: t.function })), stream: false,
+        model: model, messages, tools: expertToolDefs.map(t => ({ type: t.type, function: t.function })), stream: false,
       })
       const msg = next.choices[0].message
       if (!msg.tool_calls) { finalContent = msg.content || ''; break }
