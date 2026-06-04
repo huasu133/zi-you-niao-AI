@@ -4,6 +4,7 @@ set NPM_DIR=C:\Users\song\.workbuddy\binaries\node\versions\22.22.2
 set PATH=%NPM_DIR%;%PATH%
 
 echo 自由鸟启动中...
+start /B node app.js
+timeout /t 3 /nobreak >nul
 start http://127.0.0.1:3456
-node app.js
-pause
+echo 已启动
