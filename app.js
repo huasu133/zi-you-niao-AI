@@ -320,6 +320,27 @@ const server = app.listen(PORT, '127.0.0.1', () => {
   process.exit(1)
 })
 
+// 日志归档：每小时打包旧日志
+function archiveOldLogs() {
+  const logDir = path.join(__dirname, 'memory', 'logs')
+  const archiveDir = path.join(logDir, 'archive')
+  if (!fs.existsSync(logDir)) return
+  if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true })
+  const now = Date.now()
+  const dayAgo = now - 24 * 60 * 60 * 1000
+  const files = fs.readdirSync(logDir).filter(f => f.endsWith('.log'))
+  for (const file of files) {
+    const filePath = path.join(logDir, file)
+    const stat = fs.statSync(filePath)
+    if (stat.mtimeMs < dayAgo) {
+      const archivePath = path.join(archiveDir, `${file}.${stat.mtime.toISOString().slice(0,10)}.gz`)
+      try { fs.renameSync(filePath, archivePath) } catch (e) { /* 忽略并发冲突 */ }
+    }
+  }
+}
+archiveOldLogs()
+setInterval(archiveOldLogs, 60 * 60 * 1000)
+
 // 优雅关闭
 let shuttingDown = false
 async function gracefulShutdown(signal) {
