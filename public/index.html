@@ -154,6 +154,8 @@ body {
 .send-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--c-text-tertiary); transition: all 0.2s; }
 .send-btn.active { background: var(--c-primary); color: var(--c-white); }
 .send-btn.active:hover { background: var(--c-primary-hover); }
+.send-btn.sending { background: var(--c-primary); color: var(--c-white); border-radius: 4px; }
+.send-btn.sending:hover { background: var(--c-error); }
 .send-btn:disabled { cursor: default; }
 
 /* ===== 右侧列表面板（可折叠） ===== */
@@ -762,7 +764,11 @@ function renderImageThumbs() {
 }
 
 // ===== 聊天 =====
+let currentController = null
 async function send() {
+  // 如果正在发送中是停止按钮
+  if (currentController) { stopSend(); return }
+
   const msg = document.getElementById('input').value.trim()
   if (!msg) return
   const images = pendingImages.slice()
@@ -770,15 +776,19 @@ async function send() {
   pendingImages = []; renderImageThumbs()
   const userMsg = addMessage('user', msg, images)
   getActive().history.push({ role: 'user', content: msg, images })
-  const btn = document.getElementById('sendBtn'); btn.disabled = true; btn.classList.remove('active')
+  const btn = document.getElementById('sendBtn')
+  // 变成方形停止按钮
+  btn.classList.remove('active'); btn.classList.add('sending')
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>'
+  btn.title = '停止生成'
 
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 60000)
+    currentController = new AbortController()
+    const timeout = setTimeout(() => currentController.abort(), 120000)
     const res = await api('/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: msg, images: pendingImages.slice(), history: getActive().history.slice(-10), model: document.getElementById('modelSelect').value }),
-      signal: controller.signal,
+      signal: currentController.signal,
     })
     clearTimeout(timeout)
     if (!res.ok) throw new Error('请求失败')
@@ -809,7 +819,20 @@ async function send() {
     const err = document.createElement('div'); err.style.cssText = 'flex:1;text-align:center;color:var(--c-error);font-size:13px;padding:8px;background:#FEF2F2;border-radius:6px;margin:8px 0'
     err.textContent = '错误: ' + e.message; container.appendChild(err); scrollToBottom()
   }
-  btn.disabled = false; btn.classList.add('active')
+  resetSendBtn()
+}
+function stopSend() {
+  if (currentController) { currentController.abort(); currentController = null }
+  resetSendBtn()
+}
+function resetSendBtn() {
+  currentController = null
+  const btn = document.getElementById('sendBtn')
+  btn.classList.remove('sending'); btn.disabled = false
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>'
+  btn.title = '发送 (Enter)'
+  const input = document.getElementById('input')
+  btn.classList.toggle('active', input.value.trim().length > 0)
 }
 
 // WorkBuddy 风格工具调用折叠
