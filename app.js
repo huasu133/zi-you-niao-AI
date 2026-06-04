@@ -38,7 +38,6 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 
 // 中间件
-app.set('trust proxy', 1)
 app.use(express.json({ limit: '1mb' }))
 // 启动时缓存登录页（避免每次读磁盘 + 转义 Token 防 XSS）
 const escapeJS = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\x3c')
@@ -91,7 +90,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// API Token 认证（0.0.0.0 绑定必须）
+// API Token 认证
 const API_TOKEN = process.env.API_TOKEN || (() => {
   const crypto = require('crypto')
   const token = crypto.randomBytes(16).toString('hex')
@@ -304,7 +303,7 @@ app.post('/chat', async (req, res) => {
 })
 
 // 启动
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '127.0.0.1', () => {
   console.log(`自由鸟 v4 运行在 http://127.0.0.1:${PORT}`)
   console.log(`已加载 ${EXPERTS.length} 个专家`)
   console.log(`已注册 ${TOOLS.length} 个工具`)
