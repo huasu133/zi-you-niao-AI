@@ -457,11 +457,17 @@ function loadSessions() {
   try {
     const raw = localStorage.getItem(SESSION_STORAGE_KEY)
     if (raw) {
-      sessions = JSON.parse(raw)
-      sessions.forEach(s => sessionNames.add(s.name))
-      activeSessionId = sessions[0]?.id || 'main'
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        sessions = parsed
+        sessions.forEach(s => sessionNames.add(s.name))
+        activeSessionId = sessions[0]?.id || 'main'
+        return
+      }
     }
-  } catch (_) { sessions = [{ id: 'main', name: '对话', history: [] }] }
+  } catch (_) {}
+  sessions = [{ id: 'main', name: '对话', history: [] }]
+  sessionNames.add('对话')
 }
 function renderSessions() {
   saveSessions()
@@ -576,7 +582,7 @@ function jumpToMsg(idx) {
   if (msgs[idx]) {
     document.querySelectorAll('.msg-highlight').forEach(el => el.classList.remove('msg-highlight'))
     msgs[idx].classList.add('msg-highlight')
-    msgs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' })
+    scrollMsgTo(msgs[idx])
     setTimeout(() => msgs[idx].classList.remove('msg-highlight'), 3000)
   }
 }
@@ -753,14 +759,14 @@ async function send() {
       if (done) break
       currentReply += decoder.decode(value)
       contentEl.textContent = currentReply
-      contentEl.closest('.msg').scrollIntoView({ behavior: 'smooth', block: 'end' })
+      scrollToBottom()
     }
     getActive().history.push({ role: 'assistant', content: currentReply })
     showSessionDetail(activeSessionId)
   } catch (e) {
     const container = document.getElementById('messages')
     const err = document.createElement('div'); err.style.cssText = 'flex:1;text-align:center;color:var(--c-error);font-size:13px;padding:8px;background:#FEF2F2;border-radius:6px;margin:8px 0'
-    err.textContent = '错误: ' + e.message; container.appendChild(err); err.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    err.textContent = '错误: ' + e.message; container.appendChild(err); scrollToBottom()
   }
   btn.disabled = false; btn.classList.add('active')
 }
@@ -779,7 +785,7 @@ function addToolCallGroup() {
       <div class="tool-call-item"><div class="tc-name">write_file</div><div class="tc-args">file: "index.html"</div></div>
     </div>`
   container.appendChild(div)
-  div.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  scrollToBottom()
   return div
 }
 
@@ -796,7 +802,7 @@ function addMessage(role, content, images) {
     div.innerHTML = `<div class="msg-avatar ai">🐦</div><div class="msg-row"><div class="msg-bubble">${escapeHtml(content)}</div><div class="msg-tail"><span class="msg-time">${time}</span><span class="msg-toolbar"><button class="msg-tool-btn" title="复制" onclick="navigator.clipboard.writeText(this.closest('.msg').querySelector('.msg-bubble').textContent);toast('已复制')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="msg-tool-btn" title="赞同">👍</button><button class="msg-tool-btn" title="反对">👎</button><button class="msg-tool-btn" title="重新生成">🔄</button></span></div></div>`
   }
   container.appendChild(div)
-  div.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  scrollToBottom()
   return div
 }
 
@@ -857,6 +863,10 @@ inputArea.addEventListener('paste', function(e) {
 const chatMsg = document.getElementById('messages')
 function scrollToBottom() {
   chatMsg.scrollTo({ top: chatMsg.scrollHeight, behavior: 'smooth' })
+}
+function scrollMsgTo(el) {
+  const top = el.offsetTop - chatMsg.offsetTop - 80
+  chatMsg.scrollTo({ top, behavior: 'smooth' })
 }
 chatMsg.addEventListener('scroll', function() {
   const btn = document.getElementById('scrollBottomBtn')
@@ -920,7 +930,7 @@ function goToMessage(idx, resultIdx) {
   if (msgs[idx]) {
     document.querySelectorAll('.msg-highlight').forEach(el => el.classList.remove('msg-highlight'))
     msgs[idx].classList.add('msg-highlight')
-    msgs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' })
+    scrollMsgTo(msgs[idx])
     // 闪烁动画
     setTimeout(() => msgs[idx].classList.remove('msg-highlight'), 3000)
   }
