@@ -38,6 +38,7 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 
 // 中间件
+app.set('trust proxy', 1)
 app.use(express.json({ limit: '1mb' }))
 // 启动时缓存登录页（避免每次读磁盘 + 转义 Token 防 XSS）
 const escapeJS = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\x3c')
