@@ -31,6 +31,8 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
 
 .chat-messages { flex: 1; overflow: auto; padding: 20px; }
 .chat-input-area { padding: 12px 20px; border-top: 1px solid #e0e0e0; background: #fff; }
+.chat-toolbar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.toolbar-select { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #fff; color: #333; cursor: pointer; }
 .chat-input { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; font-size: 14px; font-family: inherit; }
 .chat-actions { display: flex; gap: 8px; margin-top: 8px; }
 .btn-primary { flex: 1; padding: 8px; background: #4a6cf7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
@@ -76,7 +78,6 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
   <div class="nav-divider">📑 多个任务</div>
   <div class="session-list" id="sessionList"></div>
   <button class="btn-new-session" onclick="createSession()">➕ 新建任务</button>
-  <div style="margin-top:auto;padding:12px 20px;font-size:11px;color:#999" id="statusBar">未连接</div>
 </div>
 
 <div class="main">
@@ -85,6 +86,18 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
       <div class="welcome">你好，我是自由鸟 AI 总控<br>可以帮你读文件、搜信息、执行任务</div>
     </div>
     <div class="chat-input-area">
+      <div class="chat-toolbar">
+        <select class="toolbar-select" id="modelSelect" title="模型选择">
+          <option value="deepseek-chat">DeepSeek-V4</option>
+          <option value="deepseek-reasoner">DeepSeek-R1</option>
+        </select>
+        <select class="toolbar-select" id="searchModeSelect" onchange="setSearchMode()" title="搜索模式">
+          <option value="basic">⚡ 快速</option>
+          <option value="deep">🔍 深度</option>
+        </select>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:#999" id="statusBar">未连接</span>
+      </div>
       <textarea class="chat-input" id="input" placeholder="跟你的 AI 说话... (Enter 发送, Shift+Enter 换行)" rows="2"></textarea>
       <div class="chat-actions">
         <button class="btn-primary" id="sendBtn" onclick="send()">发送</button>
@@ -330,6 +343,8 @@ async function toggleSearchMode() {
   toast(mode === 'deep' ? '已切换为深度搜索模式' : '已切换为快速搜索模式')
 }
 
+async function setSearchMode() { return toggleSearchMode() }
+
 async function send() {
   const msg = document.getElementById('input').value
   if (!msg) return
@@ -345,7 +360,7 @@ async function send() {
     const res = await api('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, history: getActive().history.slice(-10) }),
+      body: JSON.stringify({ message: msg, history: getActive().history.slice(-10), model: document.getElementById('modelSelect').value, searchMode: document.getElementById('searchModeSelect').value }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
