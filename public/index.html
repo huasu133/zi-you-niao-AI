@@ -14,6 +14,16 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
 .nav-item:hover { background: #f0f4ff; color: #4a6cf7; }
 .nav-item.active { background: #f0f4ff; color: #4a6cf7; font-weight: 500; }
 .nav-status { margin-left: auto; font-size: 11px; color: #999; }
+.nav-divider { display: flex; align-items: center; gap: 8px; padding: 12px 20px 6px; font-size: 11px; color: #999; text-transform: uppercase; }
+.session-list { display: flex; flex-direction: column; }
+.session-item { padding: 10px 20px; cursor: pointer; color: #555; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.session-item:hover { background: #f0f4ff; }
+.session-item.active { background: #f0f4ff; color: #4a6cf7; font-weight: 500; }
+.session-close { margin-left: auto; font-size: 14px; color: #ccc; cursor: pointer; padding: 0 4px; display: none; }
+.session-item:hover .session-close { display: block; }
+.session-close:hover { color: #e74c3c; }
+.btn-new-session { margin: 8px 12px; padding: 8px; background: #4a6cf7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: center; }
+.btn-new-session:hover { background: #3b5de7; }
 
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .tab-content { flex: 1; display: none; flex-direction: column; }
@@ -63,6 +73,9 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
   <div class="nav-item" data-tab="memory" onclick="switchTab('memory')">🧠 记忆</div>
   <div class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">📋 任务 <span class="nav-status" id="taskBadge">0</span></div>
   <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">⚙️ 设置</div>
+  <div class="nav-divider">📑 多个任务</div>
+  <div class="session-list" id="sessionList"></div>
+  <button class="btn-new-session" onclick="createSession()">➕ 新建任务</button>
   <div style="margin-top:auto;padding:12px 20px;font-size:11px;color:#999" id="statusBar">未连接</div>
 </div>
 
@@ -135,9 +148,46 @@ body { display: flex; height: 100vh; font-family: -apple-system, "Microsoft YaHe
 <div class="toast" id="toast"></div>
 
 <script>
-let history = []
+// 多任务管理
+let sessions = [{ id: 'main', name: '对话', history: [] }]
+let activeSessionId = 'main'
 let pendingConfirm = null
 const API_TOKEN = 'ziyouniao-local'
+
+function getActive() { return sessions.find(s => s.id === activeSessionId) }
+
+function renderSessions() {
+  const list = document.getElementById('sessionList')
+  list.innerHTML = sessions.map(s => `
+    <div class="session-item${s.id === activeSessionId ? ' active' : ''}" onclick="switchSession('${s.id}')">
+      💬 ${escapeHtml(s.name)}<span class="session-close" onclick="event.stopPropagation();deleteSession('${s.id}')">×</span>
+    </div>`).join('')
+}
+
+function createSession() {
+  const id = 's' + Date.now()
+  const name = '任务 ' + (sessions.length + 1)
+  sessions.push({ id, name, history: [] })
+  activeSessionId = id
+  renderSessions()
+  renderMessages()
+}
+
+function switchSession(id) {
+  activeSessionId = id
+  renderSessions()
+  renderMessages()
+  switchTab('chat')
+}
+
+function deleteSession(id) {
+  if (sessions.length <= 1) return toast('至少保留一个任务')
+  sessions = sessions.filter(s => s.id !== id)
+  if (activeSessionId === id) activeSessionId = sessions[0].id
+  renderSessions()
+  renderMessages()
+}
+renderSessions()
 
 async function api(url, opts = {}) {
   opts.headers = { ...opts.headers, 'X-API-Token': API_TOKEN }
@@ -285,7 +335,7 @@ async function send() {
   if (!msg) return
   document.getElementById('input').value = ''
   addMessage('你', msg, 'msg-user')
-  history.push({ role: 'user', content: msg })
+  getActive().history.push({ role: 'user', content: msg })
   document.getElementById('sendBtn').disabled = true
   document.getElementById('sendBtn').textContent = '处理中...'
 
@@ -295,7 +345,7 @@ async function send() {
     const res = await api('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, history: history.slice(-10) }),
+      body: JSON.stringify({ message: msg, history: getActive().history.slice(-10) }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
@@ -313,13 +363,28 @@ async function send() {
       bodyEl.textContent = currentReply
       bodyEl.parentElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
-    history.push({ role: 'assistant', content: currentReply })
+    getActive().history.push({ role: 'assistant', content: currentReply })
   } catch (e) {
     addMessage('系统', '错误: ' + e.message, 'msg-system')
   }
   document.getElementById('sendBtn').disabled = false
   document.getElementById('sendBtn').textContent = '发送'
   switchTab('chat')
+}
+
+function renderMessages() {
+  const container = document.getElementById('messages')
+  const session = getActive()
+  if (session.history.length === 0) {
+    container.innerHTML = `<div class="welcome">欢迎使用自由鸟 🐦<br>输入消息开始对话<br><br>支持的专家：叫“架构师”/“安全”/“前端”</div>`
+    return
+  }
+  container.innerHTML = ''
+  for (const msg of session.history) {
+    const who = msg.role === 'user' ? '你' : '自由鸟'
+    const cls = msg.role === 'user' ? 'msg-user' : 'msg-ai'
+    addMessage(who, msg.content, cls)
+  }
 }
 
 function addMessage(who, text, cls) {
