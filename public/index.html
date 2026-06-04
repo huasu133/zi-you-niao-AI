@@ -809,7 +809,7 @@ inputArea.addEventListener('input', function() {
 inputArea.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
 
 // Ctrl+V 粘贴截图
-document.querySelector('.input-bar').addEventListener('paste', function(e) {
+inputArea.addEventListener('paste', function(e) {
   const items = e.clipboardData?.items
   if (!items) return
   for (const item of items) {
