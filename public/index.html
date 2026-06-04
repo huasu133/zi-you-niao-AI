@@ -716,7 +716,7 @@ function addToolCallGroup() {
   const container = document.getElementById('messages')
   const div = document.createElement('div'); div.className = 'tool-call-group'
   div.innerHTML = `
-    <div class="tool-call-header" onclick="this.querySelector('.tc-body').classList.toggle('open');this.querySelector('.tc-arrow').classList.toggle('open')">
+    <div class="tool-call-header" onclick="this.parentElement.querySelector('.tc-body').classList.toggle('open');this.querySelector('.tc-arrow').classList.toggle('open')">
       <span class="tc-icon">🛠</span><span class="tc-label">工具调用</span><span class="tc-count">3</span><span class="tc-arrow open">▸</span>
     </div>
     <div class="tool-call-body tc-body open">
