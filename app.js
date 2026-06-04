@@ -187,6 +187,8 @@ app.post('/chat', async (req, res) => {
       req.destroy(new Error('请求超时(180s)'))
     })
 
+    const model = req.body.model || 'deepseek-v4-pro'
+
     const requestedExpert = EXPERTS.find(e => e.pattern.test(message))
     if (requestedExpert) {
       const expertReply = await callExpert(requestedExpert, message, history, model)
@@ -217,7 +219,6 @@ app.post('/chat', async (req, res) => {
       }
       toolCallRounds++
 
-      const model = req.body.model || 'deepseek-v4-pro'
       const noToolsNext = toolCallRounds >= MAX_TOOL_ROUNDS
       if (noToolsNext) { toolsForThisRound = undefined }
 
