@@ -808,6 +808,25 @@ inputArea.addEventListener('input', function() {
 })
 inputArea.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
 
+// Ctrl+V 粘贴截图
+document.querySelector('.input-bar').addEventListener('paste', function(e) {
+  const items = e.clipboardData?.items
+  if (!items) return
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault()
+      const blob = item.getAsFile()
+      const reader = new FileReader()
+      reader.onload = function() {
+        pendingImages.push(reader.result)
+        renderImageThumbs()
+      }
+      reader.readAsDataURL(blob)
+      break
+    }
+  }
+})
+
 // ===== 初始化 =====
 let pollInterval = 5000
 function pollHealth() {
