@@ -250,8 +250,9 @@ body {
 .msg-bubble li { margin: 3px 0; line-height: 1.6; }
 
 /* WorkBuddy 工具调用 / 过程消息折叠块 */
-.tool-call-group { margin: var(--space-sm) 0; display: none; }
-.tool-call-header { display: flex; align-items: center; gap: var(--space-sm); height: 28px; padding: 0 var(--space-sm); border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s; font-size: var(--font-caption); color: var(--c-text-secondary); }
+.tool-call-group { margin: var(--space-sm) 0; opacity: 0.5; font-size: var(--font-micro); }
+.tool-call-group:hover { opacity: 0.75; }
+.tool-call-header { display: flex; align-items: center; gap: var(--space-sm); height: 28px; padding: 0 var(--space-sm); border-radius: var(--radius-sm); cursor: default; transition: background 0.15s; font-size: var(--font-caption); color: var(--c-text-tertiary); }
 .tool-call-header:hover { background: var(--c-hover-bg); }
 .tool-call-header .tc-icon { font-size: 12px; }
 .tool-call-header .tc-label { font-weight: 500; }
@@ -807,10 +808,10 @@ function addToolCallGroup() {
   const container = document.getElementById('messages')
   const div = document.createElement('div'); div.className = 'tool-call-group'
   div.innerHTML = `
-    <div class="tool-call-header" onclick="this.parentElement.querySelector('.tc-body').classList.toggle('open');this.querySelector('.tc-arrow').classList.toggle('open')">
-      <span class="tc-icon">🛠</span><span class="tc-label">工具调用</span><span class="tc-count">3</span><span class="tc-arrow">▸</span>
+    <div class="tool-call-header">
+      <span class="tc-icon">🛠</span><span class="tc-label">正在处理...</span>
     </div>
-    <div class="tool-call-body tc-body">
+    <div class="tool-call-body tc-body" style="display:none">
       <div class="tool-call-item"><div class="tc-name">read_file</div><div class="tc-args">file: "app.js"</div></div>
       <div class="tool-call-item"><div class="tc-name">search_memory</div><div class="tc-args">query: "用户偏好"</div></div>
       <div class="tool-call-item"><div class="tc-name">write_file</div><div class="tc-args">file: "index.html"</div></div>
