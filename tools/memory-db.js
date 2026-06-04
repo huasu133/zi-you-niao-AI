@@ -318,7 +318,7 @@ async function archiveOldLogs() {
   } catch (_) {}
 }
 
-setTimeout(archiveOldLogs, 5000)
+setInterval(archiveOldLogs, 60 * 60 * 1000)
 
 module.exports = {
   loadMemory, loadLessons, saveMemory, searchMemory, reflect, archiveOldLogs,
