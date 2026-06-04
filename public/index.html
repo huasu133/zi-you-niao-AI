@@ -254,6 +254,11 @@ body {
 .tool-call-group:hover { opacity: 0.75; }
 .tool-call-header { display: flex; align-items: center; gap: var(--space-sm); height: 28px; padding: 0 var(--space-sm); border-radius: var(--radius-sm); cursor: default; transition: background 0.15s; font-size: var(--font-caption); color: var(--c-text-tertiary); }
 .tool-call-header:hover { background: var(--c-hover-bg); }
+.tc-dots { display: inline-flex; gap: 2px; }
+.tc-dots span { animation: dotPulse 1.4s infinite; font-size: 14px; line-height: 1; }
+.tc-dots span:nth-child(2) { animation-delay: 0.2s; }
+.tc-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
 .tool-call-header .tc-icon { font-size: 12px; }
 .tool-call-header .tc-label { font-weight: 500; }
 .tool-call-header .tc-count { color: var(--c-text-tertiary); margin-left: auto; font-size: var(--font-micro); }
@@ -786,10 +791,14 @@ async function send() {
     const reader = res.body.getReader()
     const decoder = new TextDecoder('utf-8', { stream: true })
     let currentReply = ''
+    let toolHidden = false
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
       currentReply += decoder.decode(value)
+      if (!toolHidden && currentReply.length > 10) {
+        toolGroup.style.display = 'none'; toolHidden = true
+      }
       contentEl.innerHTML = md2html(currentReply)
       scrollToBottom()
     }
@@ -809,13 +818,9 @@ function addToolCallGroup() {
   const div = document.createElement('div'); div.className = 'tool-call-group'
   div.innerHTML = `
     <div class="tool-call-header">
-      <span class="tc-icon">🛠</span><span class="tc-label">正在处理...</span>
+      <span class="tc-icon">🧠</span><span class="tc-label" id="toolLabel">思考中</span><span class="tc-dots"><span>.</span><span>.</span><span>.</span></span>
     </div>
-    <div class="tool-call-body tc-body" style="display:none">
-      <div class="tool-call-item"><div class="tc-name">read_file</div><div class="tc-args">file: "app.js"</div></div>
-      <div class="tool-call-item"><div class="tc-name">search_memory</div><div class="tc-args">query: "用户偏好"</div></div>
-      <div class="tool-call-item"><div class="tc-name">write_file</div><div class="tc-args">file: "index.html"</div></div>
-    </div>`
+    <div class="tool-call-body tc-body" style="display:none"></div>`
   container.appendChild(div)
   scrollToBottom()
   return div
