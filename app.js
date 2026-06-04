@@ -182,7 +182,7 @@ function sanitizeText(text) {
 // 主聊天端点
 app.post('/chat', async (req, res) => {
   try {
-    const { message, history = [] } = req.body
+    const { message, images = [], history = [] } = req.body
     if (typeof message !== 'string' || message.length > 10000)
       return res.status(400).json({ error: '无效的输入' })
 
@@ -197,7 +197,7 @@ app.post('/chat', async (req, res) => {
 
     const requestedExpert = EXPERTS.find(e => e.pattern.test(message))
     if (requestedExpert) {
-      const expertReply = await callExpert(requestedExpert, message, history, model)
+      const expertReply = await callExpert(requestedExpert, userContent, history, model)
       res.write(`\n[已激活专家: ${requestedExpert.role}]\n`)
       res.write(sanitizeText(expertReply))
       res.end()
@@ -205,10 +205,14 @@ app.post('/chat', async (req, res) => {
     }
 
     const systemPrompt = `${BASE_PROMPT}${TEAM_DESC}${await getMemoryDesc(message)}\n${SAFETY_RULES}`
+    // 构建用户消息，支持多模态图片
+    const userContent = images.length > 0
+      ? [{ type: 'text', text: message }, ...images.map(url => ({ type: 'image_url', image_url: { url } }))]
+      : message
     const messages = [
       { role: 'system', content: systemPrompt },
       ...history.slice(-20),
-      { role: 'user', content: message },
+      { role: 'user', content: userContent },
     ]
 
     const startTime = Date.now()
