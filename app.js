@@ -127,7 +127,12 @@ app.patch('/tasks/:id', (req, res) => {
 app.get('/connectors', (req, res) => {
   const status = {}
   for (const [name, mod] of Object.entries(connectors)) {
-    status[name] = mod.name === 'github' ? !!process.env.GITHUB_TOKEN : false
+    if (name === 'github') {
+      const token = process.env.GITHUB_TOKEN
+      status[name] = !!(token && token.length >= 30 && token.startsWith('ghp_'))
+    } else {
+      status[name] = false
+    }
   }
   res.json({ connectors: status })
 })
