@@ -37,6 +37,15 @@ process.on('unhandledRejection', (reason, promise) => {
   setTimeout(() => process.exit(1), 1000)
 })
 
+// API Token 认证
+const API_TOKEN = process.env.API_TOKEN || (() => {
+  const crypto = require('crypto')
+  const token = crypto.randomBytes(16).toString('hex')
+  console.warn(`⚠️ 未设置 API_TOKEN，使用随机值: ${token}`)
+  console.warn('   建议在 .env 中设置: API_TOKEN=你的密钥')
+  return token
+})()
+
 // 中间件
 app.use(express.json({ limit: '1mb' }))
 // 启动时缓存登录页（避免每次读磁盘 + 转义 Token 防 XSS）
@@ -90,14 +99,6 @@ app.use((req, res, next) => {
   next()
 })
 
-// API Token 认证
-const API_TOKEN = process.env.API_TOKEN || (() => {
-  const crypto = require('crypto')
-  const token = crypto.randomBytes(16).toString('hex')
-  console.warn(`⚠️ 未设置 API_TOKEN，使用随机值: ${token}`)
-  console.warn('   建议在 .env 中设置: API_TOKEN=你的密钥')
-  return token
-})()
 app.use((req, res, next) => {
   if (req.path === '/health') return next()
   const token = req.headers['x-api-token']
