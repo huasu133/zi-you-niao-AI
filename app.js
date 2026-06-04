@@ -341,6 +341,24 @@ function archiveOldLogs() {
 archiveOldLogs()
 setInterval(archiveOldLogs, 60 * 60 * 1000)
 
+// 自动快照：启动时+每小时 git commit & push
+function gitSnapshot() {
+  const { exec } = require('child_process')
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const cmd = `cd "${__dirname}" && git add -A && git commit -m "snapshot: ${timestamp}" && git push`
+  exec(cmd, { timeout: 30000 }, (err, stdout, stderr) => {
+    if (err) {
+      if (!stderr.includes('nothing to commit') && !stdout.includes('nothing to commit')) {
+        console.error('[快照] 失败:', err.message)
+      }
+      return
+    }
+    console.log('[快照] 已提交并推送:', timestamp)
+  })
+}
+gitSnapshot()
+setInterval(gitSnapshot, 60 * 60 * 1000)
+
 // 优雅关闭
 let shuttingDown = false
 async function gracefulShutdown(signal) {
