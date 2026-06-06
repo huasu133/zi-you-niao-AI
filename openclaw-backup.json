@@ -1,0 +1,212 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/Users/songmoxin/.openclaw/workspace",
+      "model": "deepseek-chat"
+    },
+    "list": [
+      {
+        "id": "main"
+      },
+      {
+        "id": "architect",
+        "name": "architect",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-architect",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/architect/agent",
+        "skills": [
+          "coding-agent",
+          "taskflow",
+          "diagram-maker",
+          "taskflow-inbox-triage"
+        ]
+      },
+      {
+        "id": "fe-dev",
+        "name": "fe-dev",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-fe",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/fe-dev/agent",
+        "skills": [
+          "coding-agent",
+          "canvas",
+          "node-inspect-debugger",
+          "skill-creator"
+        ]
+      },
+      {
+        "id": "electron",
+        "name": "electron",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-electron",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/electron/agent",
+        "skills": [
+          "coding-agent",
+          "spike",
+          "node-inspect-debugger",
+          "peekaboo"
+        ]
+      },
+      {
+        "id": "security",
+        "name": "security",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-security",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/security/agent",
+        "skills": [
+          "oracle",
+          "healthcheck",
+          "node-connect",
+          "session-logs",
+          "gemini"
+        ]
+      },
+      {
+        "id": "db",
+        "name": "db",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-db",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/db/agent",
+        "skills": [
+          "coding-agent",
+          "model-usage"
+        ]
+      },
+      {
+        "id": "data",
+        "name": "data",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-data",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/data/agent",
+        "skills": [
+          "summarize",
+          "model-usage",
+          "python-debugpy"
+        ]
+      },
+      {
+        "id": "seo",
+        "name": "seo",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-seo",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/seo/agent",
+        "skills": [
+          "summarize",
+          "spike"
+        ]
+      },
+      {
+        "id": "payment",
+        "name": "payment",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-payment",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/payment/agent",
+        "skills": [
+          "coding-agent",
+          "spike",
+          "taskflow"
+        ]
+      },
+      {
+        "id": "content",
+        "name": "content",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-content",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/content/agent",
+        "skills": [
+          "coding-agent",
+          "summarize",
+          "meme-maker",
+          "nano-pdf"
+        ]
+      },
+      {
+        "id": "devops",
+        "name": "devops",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-devops",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/devops/agent",
+        "skills": [
+          "github",
+          "gh-issues",
+          "healthcheck",
+          "node-connect",
+          "mcporter",
+          "clawhub"
+        ]
+      },
+      {
+        "id": "r1",
+        "name": "r1",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-r1",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/r1/agent",
+        "model": "deepseek-reasoner"
+      },
+      {
+        "id": "v4",
+        "name": "v4",
+        "workspace": "/Users/songmoxin/.openclaw/workspace-v4",
+        "agentDir": "/Users/songmoxin/.openclaw/agents/v4/agent",
+        "model": "deepseek-v4-flash"
+      }
+    ]
+  },
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 18789,
+    "auth": {
+      "mode": "token",
+      "token": "ziyouniao-local-token-2026"
+    },
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.6.1",
+    "lastTouchedAt": "2026-06-06T05:20:23.357Z"
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "deepseek": {
+        "baseUrl": "https://api.deepseek.com",
+        "apiKey": {
+          "source": "env",
+          "provider": "default",
+          "id": "DEEPSEEK_API_KEY"
+        },
+        "models": [
+          {
+            "id": "deepseek-reasoner",
+            "name": "deepseek-reasoner",
+            "api": "openai-completions",
+            "params": {
+              "support_reasoning": true
+            }
+          }
+        ]
+      },
+      "deepseek-compat": {
+        "baseUrl": "https://api.deepseek.com",
+        "apiKey": {
+          "source": "env",
+          "provider": "default",
+          "id": "DEEPSEEK_API_KEY"
+        },
+        "models": [
+          {
+            "id": "deepseek-chat",
+            "name": "deepseek-chat",
+            "api": "openai-completions"
+          },
+          {
+            "id": "deepseek-v4-flash",
+            "name": "deepseek-v4-flash",
+            "api": "openai-completions"
+          },
+          {
+            "id": "deepseek-v4-pro",
+            "name": "deepseek-v4-pro",
+            "api": "openai-completions"
+          }
+        ]
+      }
+    }
+  }
+}
